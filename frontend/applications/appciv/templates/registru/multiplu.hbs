@@ -1,0 +1,10 @@
+<div class="w2ui-field">
+	<label>{{nume}}</label>
+	<div>
+		<select name="val" size="{{source.length}}">
+			{{#each source}}
+			<option value="{{this.id}}">{{this.text}}</option>
+			{{/each}}
+		</select>
+	</div>
+</div>

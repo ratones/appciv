@@ -1,0 +1,18 @@
+    <div>
+    <div class="w2ui-field" name="rfcontainer">
+        <label>{{lblFata}}</label>
+        <div>
+            <input type="text"  name="id_roataf" id="Anvelope_{{index}}__id_roataf"/>
+        </div>
+    </div>
+    <div class="w2ui-field" name="rscontainer" >
+        <label>{{lblSpate}}</label>
+        <div>
+            <input type="text"  name="id_roatas" id="Anvelope_{{index}}__id_roatas"/>
+        </div>
+    </div>
+    </div>
+    <div style="float: right; margin-top: -50px;">
+        <button class="btn btn-red btn-icon-only btnDelAnvelopa" ><i class="w2ui-icon-cross"></i></button>
+    </div>
+

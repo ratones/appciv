@@ -1,0 +1,4 @@
+<div style="display:none">
+	<input id="fileupload" type="file" class="file" name="files[]" multiple  accept=".xml">
+</div>
+<div id="grid" class="page"></div>

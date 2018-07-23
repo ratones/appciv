@@ -1,0 +1,22 @@
+{
+    "name": "pdfviewer",
+    "version": "0.0.0",
+    "description": "Aplicatie desktop RAR - DOT",
+    "main": "index.html",
+    "single-instance": false,
+    "author": "Cristi M.",
+    "license": "ISC",
+    "webkit": {
+        "plugin": true
+    },
+    "window": {
+        "title": "PDF Viewer",
+        "width": 800,
+        "height": 600,
+        "min_width": 650,
+        "min_height": 650,
+        "toolbar": false,
+        "kiosk": false
+    },
+    "chromium-args": "--child-clean-exit --ignore-certificate-errors"
+}

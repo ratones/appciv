@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Autentificare</title>
+    <!--build:css ./../../bundle.css-->
+    <link rel="stylesheet" type="text/css" href="./../../build/bundle.css">
+    <!--/build-->
+</head>
+
+<body>
+    <div id="login_form" class="windowContent w2ui-reset w2ui-form">
+        <div class="w2ui-page page-0 modalContent" style="width:430px">
+            <div id="message"></div>
+            <div class="w2ui-field">
+                <label>Username:</label>
+                <div>
+                    <input name="username" list="usrlist" id="username" type="text" maxlength="100" v-model="username" style="width: 250px;" />
+                    <datalist id="usrlist"></datalist>
+                </div>
+            </div>
+            <div class="w2ui-field">
+                <label>Password:</label>
+                <div>
+                    <input name="password" id="password" type="password" maxlength="100" v-model="password" style="width: 250px" />
+                </div>
+            </div>
+            <div class="w2ui-field">
+                <label>Retine datele:</label>
+                <div>
+                    <input name="rememberme" id="rememberme" type="checkbox" />
+                </div>
+            </div>
+        </div>
+        <div class="w2ui-buttons">
+            <button class="btn btn-red" name="cancel" id="cancel">Cancel</button>
+            <button class="btn btn-blue" name="login" id="login">Login</button>
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+window.requireNode = window.require;
+var gui = requireNode("nw.gui");
+var ipc = requireNode("ipc");
+var win = gui.Window.get();
+var lst = ipc.sendSync('user:request:userlist');
+var usrlist = lst.length > 0 ? JSON.parse(lst) : [];
+
+for (var i in usrlist) {
+    var usr = usrlist[i];
+    var option = new Option(i);
+    document.getElementById('usrlist').appendChild(option);
+}
+
+document.getElementById('username').addEventListener('input', function() {
+    var pass = ipc.sendSync('pass:request:decrypt', usrlist[document.getElementById("username").value].pass);
+    document.getElementById('password').value = pass;
+});
+
+ipc.on('app:login:failed', function(event, error) {
+    document.getElementById("message").innerHTML = '<p>' + error[0].message + '</p>';
+});
+document.getElementById("message").innerHTML = '<p>' + win.data.message + '</p>';
+document.getElementById("login").addEventListener("click", function() {
+    var user = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value,
+        rememberme: document.getElementById("rememberme").checked ? true : false,
+        appname: win.data.app
+    };
+    ipc.send("app:request:login", user);
+});
+document.getElementById("cancel").addEventListener("click", function() {
+    win.close();
+});
+</script>
+
+</html>

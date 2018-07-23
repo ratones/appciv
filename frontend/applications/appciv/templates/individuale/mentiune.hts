@@ -1,0 +1,5 @@
+<div style="display:flex">
+    <input  type="text" name="text" maxlength="50"  />
+    <button name="delMentiune" class="btn btn-red"><i class="w2ui-icon-cross"></i></button>
+    <button name="anvMentiune" class="btn btn-green"><i class="w2ui-icon-columns"></i></button>
+</div>

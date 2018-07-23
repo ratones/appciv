@@ -1,0 +1,20 @@
+<div class="w2ui-field">
+	<label style="width:160px">{{nume}}</label>
+	<div>
+	{{#if multiple}}
+		<select name="pseudo" size="{{multivalues.length}}">
+		{{#each multivalues}}
+  			<option value="{{this}}">{{this}}</option>
+  		{{/each}}
+		</select>
+		<div name="btnAddValue" class="btn btn-blue btnmark btnAddValue" data-model="{{index}}" tabindex="-1"><i class="w2ui-icon-plus" ></i></div>
+		{{#if deletable}}
+		<div name="btnDelValue" class="btn btn-red btnmark btnDelValue" data-model="{{index}}" tabindex="-1"><i class="w2ui-icon-cross" ></i></div>
+		{{/if}}
+	{{else}}
+		<input type="text" id="DateTehnice_{{index}}__val" name="val"/>
+		<span id="DateTehnice_{{index}}__suggested_val" name="suggested_val"></span>
+		</div>
+	{{/if}}
+	
+</div>

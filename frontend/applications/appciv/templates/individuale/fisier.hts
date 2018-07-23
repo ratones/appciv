@@ -1,0 +1,6 @@
+<div style="text-align: center; width:125px;float:left;cursor:pointer">
+    <label>{{slotName}}</label>
+    <img name="slot" width="100px" height="100px" style="border:thin solid #ccc" src="{{preview}}" alt="Click pentru a incarca un fisier in acest slot" />
+    <button style="display:none" class="btn btn-red" name="delBtn"><i class="w2ui-icon-cross"></i></button>
+</div>
+<input style="display:none;" name="fileDialog" accept=".jpg,.png,.pdf" type="file" />

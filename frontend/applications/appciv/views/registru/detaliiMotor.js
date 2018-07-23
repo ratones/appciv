@@ -1,0 +1,47 @@
+module.exports = Marionette.ItemView.extend({
+    template: require('./../../templates/registru/detaliiMotor.hbs'),
+    className: 'fullPage',
+    bindings: {
+        '#tip': 'tip',
+        '#cod': 'cod',
+        '#combustib': 'combustib',
+        '#tip_motor': 'tip_motor',
+        '#tip_alim': 'tip_alim',
+        '#timpi': 'timpi',
+        '#tip_racire': 'tip_racire',
+        '#tip_depol': 'tip_depol',
+        '#p_max_kw': 'p_max_kw',
+        '#p_max_cp': 'p_max_cp',
+        '#rot_p_max': 'rot_p_max',
+        '#cuplu_max': 'cuplu_max',
+        '#rot_c_max': 'rot_c_max',
+        '#nr_cilindr': 'nr_cilindr',
+        '#cilindree': 'cilindree',
+        '#config': 'config',
+        '#alezaj': 'alezaj',
+        '#cursa': 'cursa',
+        '#compresie': 'compresie',
+        '#echipare': 'echipare',
+        '#echipare1': 'echipare1',
+        '#echipare2': 'echipare2',
+        '#echipare3': 'echipare3',
+        '#echipare4': 'echipare4',
+        '#partic1': 'partic1',
+        '#partic2': 'partic2',
+        '#partic3': 'partic3',
+        '#co': 'co',
+        '#hc': 'hc',
+        '#nox': 'nox',
+        '#particule': 'particule',
+        '#opacitate': 'opacitate',
+        '#doc_omolog': 'doc_omolog',
+        '#kw_max_net': 'kw_max_net',
+        '#kw_max_h':'kw_max_h',
+        '#kw_max_30':'kw_max_30',
+        '#observatii': 'observatii'
+
+    },
+    onRender: function() {
+        this.stickit();
+    }
+});

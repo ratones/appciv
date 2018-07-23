@@ -1,0 +1,12 @@
+<div class="w2ui-page page-0">
+    <div class="w2ui-field">
+        <label style="width:75px;">Nr. factura:</label>
+        <div style="margin-left:75px;">
+            <input type="text" style="width: 200px" id="id_fact" name="id_fact" />
+        </div>
+    </div>
+</div>
+<div class="w2ui-buttons">
+    <button class="btn btn-red" id="btnCancelPlata"><i class="w2ui-icon-cross"></i></button>
+    <button class="btn btn-blue" id="btnSavePlata"><i class="w2ui-icon-save"></i></button>
+</div>

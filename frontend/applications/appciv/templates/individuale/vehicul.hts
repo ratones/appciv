@@ -1,0 +1,134 @@
+<div id="vehiculTemplate" class="form-model" style="width:100%;margin:0 auto;height:100%">
+    <input type='hidden' name="id" id="id" data-bind="value:id" />
+    <input type="hidden" name="id_comanda" data-bind="value:id_comanda" />
+        <div style="height:100%;min-width: 500px" id="date_principale">
+        <fieldset>
+            <legend>Date vehicul</legend>
+            <div class="w2ui-field">
+                <label>VIN:</label>
+                <div><input type='text'  id="vin" maxlength="17" style="text-transform: uppercase"/></div>
+            </div>
+            <div class="w2ui-field">
+                <label >WVTA:</label>
+                <div><input type="text"  id="wvta" /></div>
+                
+            </div>
+            <div class="w2ui-field">
+                <label >Tip:</label>
+                <div><input type="text"  id="tip" /></div>
+            </div><div class="w2ui-field">
+                <label >Varianta:</label>
+                <div><input type="text"  id="varianta" /></div>
+            </div><div class="w2ui-field">
+                <label >Versiune:</label>
+                <div><input type="text"  id="versiune" /></div>
+            </div>
+            <div class="w2ui-field">
+                <label >An fabricatie:</label>
+                <div><input type="text"  class="input-sm" id="an_fabr" maxlength="4" /></div>
+                
+            </div>
+            <div class="w2ui-field">
+                <label >Masa reala(kg):</label>
+                <div><input type="text"  class="input-sm" id="masa_reala" maxlength="6" /></div>
+                
+            </div>
+            <div class="w2ui-field" style="margin-bottom:5px">
+                <label >Culoare:</label>
+                <div><input type="text"  id="culoare" class="select-control" /></div>
+            </div>
+            <div id="engine_container">
+                <div class="w2ui-field engine">
+                    <label >Cod motor:</label>
+                    <div><input type="text"  id="cod_motor" /></div>
+                </div>
+                <div class="w2ui-field engine">
+                    <label >Putere kW:</label>
+                    <div><input type="text" class="input-sm"  id="putere_kw" /></div>
+                </div>
+                <div class="w2ui-field engine">
+                    <label >Cilindree:</label>
+                    <div><input type="text" class="input-sm" id="cilindree" /></div>
+                </div>
+                <div class="w2ui-field engine">
+                    <label>Serie motor:</label>
+                    <div><input type="text"  id="serie_motor" /></div>  
+                </div>
+                <div class="w2ui-field">
+                    <label>CO2 WLTP Comb.:</label>
+                    <div><input type="text"  id="co2_wltp" /></div>  
+                </div>
+                <div class="w2ui-field">
+                    <label>CO2 alt. WLTP Comb.:</label>
+                    <div><input type="text"  id="co2_wltp_alt" /></div>  
+                </div>
+            </div>
+            <div class="w2ui-field">
+                <label>Observatii:</label>
+                <div><textarea id="observatii" style="box-sizing: border-box; margin: 0px; width: 400px; height: 70px;"></textarea></div>  
+            </div>
+             <div class="w2ui-field">
+                <label>Motiv anulare:</label>
+                <div><textarea id="motiv_respingere" style="box-sizing: border-box; margin: 0px; width: 400px; height: 70px;"></textarea></div>  
+            </div>
+            </fieldset>
+            <fieldset>
+                <legend>Nr. omologare RAR:</legend>
+             <div class="w2ui-field">
+                <div><input type="text" style="font-size: 18px;width:300px;text-transform:uppercase"  id="nr_registru" /></div>
+            </div>
+            </fieldset>
+        <!--</form>-->
+            <fieldset>
+            <legend>Mentiuni suplimentare:</legend>
+            <button class="btn btn-green" id="btnAddMentiune"><i class="w2ui-icon-plus"></i></button>
+            <div class="mentiuni w2ui-field" id="mentiuni_container">
+                <!--<input  type="text" id="ment1" maxlength="50"  />
+                <input type="text"  id="ment2" maxlength="50"  />
+                <input type="text"  id="ment3" maxlength="50"  />
+                <input type="text"  id="ment4" maxlength="50"  />
+                <input type="text"  id="ment5" maxlength="50"  />-->
+            </div>
+            </fieldset>
+        </div>
+        <div  style="height:100%" id="date_tehnice">
+            <div id="date_tehnice_container">
+            </div>
+            <br>
+            <button class="btn btn-green" id="btnAddFile" 
+                style=" position: absolute; bottom: 10px;left: 10px;">
+                <i class="w2ui-icon-plus"></i>
+            </button>
+        </div>
+    <!--end vehicule container-->
+        <div id="buttons_container">
+        <div class="col-md-9" id="operation_container">
+            <button title="Inchide" class="btn btn-default" id="btnBack"><i class="w2ui-icon-back"></i> Inchide
+            </button>
+            <button title="Salvare" class="btn btn-green" id="btnSaveVehicul"><i class="w2ui-icon-save"></i> Salveaza
+            </button>
+            <button disabled title="Copiere" class="btn btn-orange" id="btnCopyVehicul"><i class="w2ui-icon-paste" ></i> Copiaza
+            </button>
+            <button disabled title="Tipar CIV" class="btn btn-blue" id="btnVehiculComplet"><i class="w2ui-icon-print"></i> Tipar CIV
+            </button>
+            <button disabled title="Arhivare CIV" class="btn btn-green" id="btnArhivare"><i class="w2ui-icon-columns"></i> Arhivare CIV
+            </button>
+            <button  title="Anulare" class="btn btn-red" id="btnNewWindow"><i class="w2ui-icon-cross"></i> Anulare
+            </button>
+            <button  title="Deblocare" class="btn btn-green" id="btnUnlock"><i class="w2ui-icon-check"></i> Deblocare
+            </button>
+            <button disabled title="Transmite" class="btn btn-orange" id="btnSendVehicul"><i class="w2ui-icon-mail" ></i> Transmite
+            </button>
+            </button>
+            <button disabled title="Raport" class="btn btn-blue" id="btnFisaVehicul"><i class="w2ui-icon-print" ></i> Raport
+            </button>
+        </div>
+        <div class="col-md-3" id="supervize_container">
+            <button id="btnFirst">|<</button>
+            <button id="btnPrev"><</button>
+            <input type="text" id="currentIndex" style="width:50px" readonly/>
+            <button id="btnNext">></button>
+            <button id="btnLast">>|</button>
+        </div>
+        </div>
+</div>

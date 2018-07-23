@@ -1,0 +1,2 @@
+<div id="grid" class="page"></div>
+<input style="display:none;" id="dialog" type="file" nwsaveas="situatie.xls" />

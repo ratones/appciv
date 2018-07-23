@@ -1,0 +1,293 @@
+var ipc = requireNode('ipc');
+var config = {
+    modules: {
+        user: {
+            active: false
+        },
+        appciv: {
+            name: 'appciv',
+            title: 'Cereri C.I.V.',
+            active: false,
+            external_server: 'https://prog.rarom.ro:447/civapi/',
+            intranet_server: 'http://10.1.0.32:8095/civapi/',
+            dev_server: 'http://10.2.2.10:8095/civapi/',
+            'menuDescriptor': [{
+                label: 'Pagina de start',
+                type: 'normal',
+                icon: 'w2ui-icon-info',
+                show: function() {
+                    return ipc.sendSync('user:isAuthenticated', 'appciv');
+                },
+                click: function() {
+                    console.log(__dirname + ' ' + process.cwd());
+                    window.location.hash = '#appciv/home';
+                }
+            }, {
+                label: 'Manual utilizare',
+                type: 'normal',
+                icon: 'w2ui-icon-question-circle',
+                show: function() {
+                    return ipc.sendSync('user:isAuthenticated', 'appciv');
+                },
+                click: function() {
+                    var opt = {
+                        title: 'Notificare',
+                        text: 'Inregistrarea a fost salvata!',
+                        type: 'success-template'
+                    };
+
+                    ipc.send('app:notification:show', opt);
+                }
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Autentificare',
+                type: 'normal',
+                icon: 'w2ui-icon-lock',
+                show: function() {
+                    return !ipc.sendSync('user:isAuthenticated', 'appciv');
+                },
+                click: function() {
+                    app.execute('app:user:login', 'appciv');
+                }
+            }, {
+                label: 'Comenzi C.I.V.',
+                type: 'normal',
+                icon: 'w2ui-icon-folder',
+                show: function() {
+                    return ipc.sendSync('user:isAuthenticated', 'appciv');
+                },
+                submenu: [{
+                    icon: 'w2ui-icon-plus',
+                    type: 'normal',
+                    label: 'Comanda noua',
+                    click: function() {
+                        window.location.hash = '#appciv/editCerere';
+                    }
+                }, {
+                    label: 'Lista comenzi',
+                    type: 'normal',
+                    icon: 'w2ui-icon-columns',
+                    click: function() {
+                        window.location.hash = '#appciv/cereri';
+                    }
+                }]
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Sfarsit serie',
+                type: 'normal',
+                icon: 'w2ui-icon-folder',
+                show: function() {
+                    return ipc.sendSync('user:isAuthenticated', 'appciv');
+                },
+                submenu: [{
+                    label: 'Lista vehicule',
+                    type: 'normal',
+                    icon: 'w2ui-icon-columns',
+                    click: function() {
+                        window.location.hash = '#appciv/listVins';
+                    }
+                }]
+            }]
+        },
+        appdot: {
+            active: true,
+            title: 'Registru D.O.T.',
+            name: 'appdot',
+            external_server: 'https://prog.rarom.ro:446/dotapi/',
+            intranet_server: 'http://10.1.0.32:8083/dotapi/',
+            dev_server: 'http://10.2.2.10:8083/dotapi/',
+            'menuDescriptor': [{
+                label: 'Pagina de start',
+                type: 'normal',
+                icon: 'w2ui-icon-info',
+                show: function() {
+                    return ipc.sendSync('user:isAuthenticated', 'appdot');
+                },
+                click: function() {
+                    window.location.hash = '#appdot/home';
+                }
+            }, {
+                label: 'Manual utilizare',
+                type: 'normal',
+                icon: 'w2ui-icon-question-circle',
+                show: function() {
+                    return ipc.sendSync('user:isAuthenticated', 'appdot');
+                },
+                click: function() {
+                    alert('manual requested');
+                }
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Autentificare',
+                type: 'normal',
+                icon: 'w2ui-icon-lock',
+                show: function() {
+                    return !ipc.sendSync('user:isAuthenticated', 'appdot');
+                },
+                click: function() {
+                    app.execute('app:user:login', 'appdot');
+                }
+            }, {
+                label: 'Registru',
+                type: 'normal',
+                icon: 'w2ui-icon-folder',
+                show: function() {
+                    return (ipc.sendSync('user:isAuthenticated', 'appdot') &&
+                        ipc.sendSync('user:request:isuserinrole', [
+                            [1, 3, 5, 6], 'appdot'
+                        ]));
+                },
+                submenu: [{
+                    label: 'Intrari',
+                    type: 'normal',
+                    icon: 'w2ui-icon-file',
+                    click: function() {
+                        window.location.hash = '#appdot/registruIntrari';
+                    }
+                }, {
+                    label: 'Iesiri',
+                    type: 'normal',
+                    icon: 'w2ui-icon-file',
+                    click: function() {
+                        window.location.hash = '#appdot/registruIesiri';
+                    }
+                }, {
+                    label: 'Print',
+                    type: 'normal',
+                    icon: 'w2ui-icon-print',
+                    click: function() {
+                        window.location.hash = '#appdot/registruPrint';
+                    }
+                }]
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Cereri',
+                type: 'normal',
+                icon: 'w2ui-icon-file',
+                show: function() {
+                    return ipc.sendSync('user:isAuthenticated', 'appdot');
+                },
+                submenu: [{
+                    label: 'Inregistrare nationala',
+                    type: 'normal',
+                    icon: 'w2ui-icon-star',
+                    click: function() {
+
+                    }
+                }, {
+                    label: 'Omologare de tip',
+                    type: 'normal',
+                    icon: 'w2ui-icon-star-black',
+                    click: function() {
+
+                    }
+                }]
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Dosare',
+                type: 'normal',
+                icon: 'w2ui-icon-folder',
+                show: function() {
+                    return ipc.sendSync('user:isAuthenticated', 'appdot');
+                },
+                submenu: [{
+                    label: 'Audit',
+                    type: 'normal',
+                    icon: 'w2ui-icon-file',
+                    click: function() {
+
+                    }
+                }, {
+                    label: 'Inregistrare nationala',
+                    type: 'normal',
+                    icon: 'w2ui-icon-star',
+                    click: function() {
+                        window.location.hash = '#appdot/dosareInregistrare';
+                    }
+                }, {
+                    label: 'Omologare de tip',
+                    type: 'normal',
+                    icon: 'w2ui-icon-star-black',
+                    click: function() {
+                        window.location.hash = '#appdot/dosareOmologare';
+                    }
+                }, {
+                    label: 'Statistica',
+                    type: 'normal',
+                    icon: 'w2ui-icon-line-chart',
+                    click: function() {
+                        window.location.hash = '#appdot/dosareStatistica';
+                    }
+                }, {
+                    label: 'Statistica Devize',
+                    type: 'normal',
+                    icon: 'w2ui-icon-line-chart',
+                    click: function() {
+                        window.location.hash = '#appdot/statusdevize';
+                    }
+                }]
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Diverse',
+                icon: 'w2ui-icon-file',
+                show: function() {
+                    return ipc.sendSync('user:request:isuserinrole', [
+                        [1, 3], 'appdot'
+                    ]);
+                },
+                submenu: [{
+                    label: 'Beneficiari',
+                    icon: 'w2ui-icon-users',
+                    click: function() {
+                        window.location.hash = '#appdot/listaBeneficiari';
+                    }
+                }, {
+                    label: 'Acte normative',
+                    icon: 'w2ui-icon-list-alt',
+                    click: function() {
+                        window.location.hash = '#appdot/listaActe';
+                    }
+                }]
+            }]
+        }
+    },
+    serverURL: '',
+    "fileinputDefaults": {
+        "allowedFileExtensions": [
+            "pdf",
+            "xml",
+            "jpg",
+            "gif",
+            "png"
+        ],
+        "allowedPreviewTypes": [
+            "image",
+            "pdf"
+        ],
+        "fileActionSettings": {
+            "removeTitle": "Sterge fisier",
+            "uploadTitle": "Incarca fisier",
+            "indicatorNewTitle": "Fisier neincarcat inca...",
+            "indicatorSuccessTitle": "Incarcat",
+            "indicatorErrorTitle": "Eroare incarcare",
+            "indicatorLoadingTitle": "Se incarca ..."
+        },
+        "uploadTitle": "Incarca",
+        "uploadLabel": " Incarca",
+        "browseTitle": "Alege fisiere",
+        "browseLabel": " Alege...",
+        "removeTitle": "Reset",
+        "removeLabel": " Reset",
+        "dropZoneTitle": "Trageti fisiere aici",
+        "previewTemplates": {
+            "other": "<div class=\"file-preview-frame\" id=\"{previewId}\" data-fileindex=\"{fileindex}\"><div class=\"file-preview-other\"><i class=\"w2ui-icon-file\"></i>\n</div>\n{footer}</div>"
+        }
+    }
+};
+module.exports = config;

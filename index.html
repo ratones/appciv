@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Aplicatie CIV</title>
+    <!-- build:css ./bundle.css -->
+    <link rel="stylesheet" type="text/css" href="./build/bundle.css">
+    <!-- /build -->
+    <!-- build:js ./bundles.js -->
+    <script type="text/javascript" src="./build/bundles.js"></script>
+    <!-- /build -->
+</head>
+
+<body>
+    <div id="topmenu"></div>
+    <div id="mainLayout" class="fullscreen">
+        <!--  <div class="fullscreen" style="text-align:center">
+            <img src="./assets/loader1.gif">
+        </div> -->
+    </div>
+    <script>
+    if (typeof(window.require) !== 'undefined') {
+        window.requireNode = window.require;
+    }
+
+    // var thisWin = requireNode('nw.gui').Window.get();
+    window.addEventListener('resize', function() {
+        w2ui.layout.resize();
+    });
+    </script>
+    <!-- build:js ./main.js -->
+    <script type="text/javascript" src="./build/main.js"></script>
+    <!-- /build -->
+</body>
+
+</html>

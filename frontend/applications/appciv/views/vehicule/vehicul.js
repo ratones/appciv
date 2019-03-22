@@ -444,7 +444,7 @@ var root, vehicul,
             //var wild = /^$/;
 
             if (vin !== undefined && vin.length > 0) {
-                if (regex.test(vin) && vin.length === 17) {
+                if (regex.test(vin) && ((vin.length === 17 && this.model.get('categ_euro').search('T') === -1) || (vin.length <= 17 && this.model.get('categ_euro').search('T') !== -1))) {
                     //app.Util.removeError($('#vin').parent());
                     this.model.set('vin', vin);
                     return true;
@@ -506,6 +506,7 @@ var root, vehicul,
             };
             if (self.validatenewvin() && w2utils.validate(self.model, self.$el)) {
                 self.model.save({}, options);
+                //alert('isValid')
             }
         },
         copy: function() {

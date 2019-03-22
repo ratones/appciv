@@ -1,6 +1,6 @@
 {
 	"name": "rarciv",
-	"version": "1.0.50",
+	"version": "1.0.52",
 	"description": "Aplicatie desktop RAR - CIV",
 	"main": "index.html",
 	"single-instance": true,

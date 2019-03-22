@@ -747,114 +747,114 @@ var root, vehicul,
                 id: this.model.id && this.model.id !== 0 ? this.model.id : 0
             };
 
-            $.ajax({
-                url: root + 'vehicule/getwvta',
-                data: {
-                    id_tvv: self.model.get('id_tvv')
-                },
-                success: function(response) {
-                    self.model.set('categ_euro', response.categ_euro);
-                    if (response.categ_euro.substr(0, 1) !== 'O' && response.categ_euro.substr(0, 1) !== 'R') {
-                            // $('#serie_motor').attr('disabled', null);
-                            // $('#motor').attr('disabled', null);
-                            $('#engine_container').show();
-                            $('#cod_motor').w2field().reinit();
-                            self.model.set('serie_motor', '').set('motor', '');
-                            if(response.categ_euro.split('|').length > 1){
-                                $('#categ_euro').w2field('list',{
-                                    items:response.categ_euro.split('|')
-                                });
-                                $('#categorie').show();
-                            }else{
-                                $('#categorie').hide();
-                            }
-                        } else {
-                            console.log("Remorca!!");
-                            // $('#serie_motor').attr('disabled', true);
-                            // $('#motor').attr('disabled', true);
-                            $('#engine_container').hide();
-                        }
-                    }
-                });
+        //     $.ajax({
+        //         url: root + 'vehicule/getwvta',
+        //         data: {
+        //             id_tvv: self.model.get('id_tvv')
+        //         },
+        //         success: function(response) {
+        //             self.model.set('categ_euro', response.categ_euro);
+        //             if (response.categ_euro.substr(0, 1) !== 'O' && response.categ_euro.substr(0, 1) !== 'R') {
+        //                     // $('#serie_motor').attr('disabled', null);
+        //                     // $('#motor').attr('disabled', null);
+        //                     $('#engine_container').show();
+        //                     $('#cod_motor').w2field().reinit();
+        //                     self.model.set('serie_motor', '').set('motor', '');
+        //                     if(response.categ_euro.split('|').length > 1){
+        //                         $('#categ_euro').w2field('list',{
+        //                             items:response.categ_euro.split('|')
+        //                         });
+        //                         $('#categorie').show();
+        //                     }else{
+        //                         $('#categorie').hide();
+        //                     }
+        //                 } else {
+        //                     console.log("Remorca!!");
+        //                     // $('#serie_motor').attr('disabled', true);
+        //                     // $('#motor').attr('disabled', true);
+        //                     $('#engine_container').hide();
+        //                 }
+        //             }
+        //         });
             
-                self.model.get('Atribute').reset();
-                $.ajax({
-                    url: root + 'individuale/getatributevehicul',
-                    data: params,
-                    dataType: 'json',
-                    type: 'GET',
-                    success: function(response) {
-                        if(response.error !==''){
-                            w2alert(response.error);
-                        }
-                        if(response.atribute.length == 0){
-                            $('#date_tehnice_container').hide()
-                            self.model.get('Atribute').reset();
-                            return;
-                        }else{
-                            $('#date_tehnice_container').show()
-                        }
-                        app.trigger('wltp:changed',response.iswltp == 1);
-                        self.model.get('Atribute').reset(response.atribute);
-                        if (self.isNew) {
-                            self.renderatributes(response.iswltp);
-                        }
-                        self.model.set('nr_registru',response.nr_registru);
-                        // self.model.get('Mentiuni').reset(response.mentiuni);
-                        var added = [];
+        //         self.model.get('Atribute').reset();
+        //         $.ajax({
+        //             url: root + 'individuale/getatributevehicul',
+        //             data: params,
+        //             dataType: 'json',
+        //             type: 'GET',
+        //             success: function(response) {
+        //                 if(response.error !==''){
+        //                     w2alert(response.error);
+        //                 }
+        //                 if(response.atribute.length == 0){
+        //                     $('#date_tehnice_container').hide()
+        //                     self.model.get('Atribute').reset();
+        //                     return;
+        //                 }else{
+        //                     $('#date_tehnice_container').show()
+        //                 }
+        //                 app.trigger('wltp:changed',response.iswltp == 1);
+        //                 self.model.get('Atribute').reset(response.atribute);
+        //                 if (self.isNew) {
+        //                     self.renderatributes(response.iswltp);
+        //                 }
+        //                 self.model.set('nr_registru',response.nr_registru);
+        //                 // self.model.get('Mentiuni').reset(response.mentiuni);
+        //                 var added = [];
                         
-                        response.mentiuni.split('\n').map(function(m,i){
-                            added.push({
-                                id:null,
-                                text:m,
-                                id_vehicul:self.model.id,
-                                nr_rand:i,
-                                nr_identif:self.model.get('vin')
-                            })
-                        });
-                        var currindex = added.length;
-                        self.existing.map(function(m){
-                            m.nr_rand = currindex;
-                            currindex ++;
-                        })
-                        var ment = added.concat(self.existing)
-                        self.model.get('Mentiuni').reset(ment);
-                        self.renderMentiuni();
-                    },
-                    error: function(response) {
-                        console.error(response);
-                    }
-                });
-                //reload anvelope
-                self.model.get('Anvelope').reset();
-                $.ajax({
-                    url: root + 'individuale/getanvelopevehicul',
-                    data: params,
-                    dataType: 'json',
-                    type: 'GET',
-                    success: function(response) {
-                        if(response.length == 0){
-                            $('#anvelope_container').hide()
-                            self.model.get('Anvelope').reset();
-                            return;
-                        }else{
-                            $('#anvelope_container').show()
-                        }
-                        vehicul.loadListeAnvelope(self.model, function() {
-                            self.model.get('Anvelope').reset(response);
-                            if (self.isNew) {
-                                self.renderanvelope();
-                            } else {
-                               app.module('appciv').trigger('anvelopeView:setSelect');
-                            }
-                            // self.renderanvelope();
-                        });
-                    },
-                    error: function(response) {
-                        console.error(response);
-                    }
-                });
-        },
+        //                 response.mentiuni.split('\n').map(function(m,i){
+        //                     added.push({
+        //                         id:null,
+        //                         text:m,
+        //                         id_vehicul:self.model.id,
+        //                         nr_rand:i,
+        //                         nr_identif:self.model.get('vin')
+        //                     })
+        //                 });
+        //                 var currindex = added.length;
+        //                 self.existing.map(function(m){
+        //                     m.nr_rand = currindex;
+        //                     currindex ++;
+        //                 })
+        //                 var ment = added.concat(self.existing)
+        //                 self.model.get('Mentiuni').reset(ment);
+        //                 self.renderMentiuni();
+        //             },
+        //             error: function(response) {
+        //                 console.error(response);
+        //             }
+        //         });
+        //         //reload anvelope
+        //         self.model.get('Anvelope').reset();
+        //         $.ajax({
+        //             url: root + 'individuale/getanvelopevehicul',
+        //             data: params,
+        //             dataType: 'json',
+        //             type: 'GET',
+        //             success: function(response) {
+        //                 if(response.length == 0){
+        //                     $('#anvelope_container').hide()
+        //                     self.model.get('Anvelope').reset();
+        //                     return;
+        //                 }else{
+        //                     $('#anvelope_container').show()
+        //                 }
+        //                 vehicul.loadListeAnvelope(self.model, function() {
+        //                     self.model.get('Anvelope').reset(response);
+        //                     if (self.isNew) {
+        //                         self.renderanvelope();
+        //                     } else {
+        //                        app.module('appciv').trigger('anvelopeView:setSelect');
+        //                     }
+        //                     // self.renderanvelope();
+        //                 });
+        //             },
+        //             error: function(response) {
+        //                 console.error(response);
+        //             }
+        //         });
+         },
 
         reset:function(){
             var self = this;

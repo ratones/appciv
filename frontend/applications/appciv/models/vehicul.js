@@ -3,7 +3,8 @@ var VehiculModel = window.Backbone.SModel.extend({
         return app.baseUrl + 'vehicule/edit';
     },
     defaults: {
-        canBeDirty:true
+        canBeDirty:true,
+        categ_euro:''
     },
     fields: function() {
         var self = this;

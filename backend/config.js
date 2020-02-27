@@ -175,16 +175,41 @@ var config = {
                 type: 'normal',
                 show: function () {
                     return ipc.sendSync('user:isAuthenticated', 'appciv') && ipc.sendSync('user:request:isuserinrole', [
-                        [999], 'appciv'
+                        [1], 'appciv'
                     ]);
+                    // return false //WORK IN PROGRESS
                 },
                 submenu: [{
                     icon: 'w2ui-icon-plus',
                     type: 'normal',
                     label: w2utils.lang('Cerere noua'),
-                    click: function () {
-                        window.location.hash = '#appciv/newCerereOmol';
-                    }
+                    submenu:[
+                        {
+                            type:'normal',
+                            label: w2utils.lang('Inregistrare de Tip'),
+                            click: function() {
+                                window.location.hash = '#appciv/editCerereOmologare'
+                            }
+                        },
+                        {
+                            type:'normal',
+                            label: w2utils.lang('Omologare cu COC'),
+                            click: function() {
+                                window.location.hash = '#appciv/editCerereCOC'
+                            }
+                        },
+                        {
+                            type:'normal',
+                            label: w2utils.lang('Omologare Artizanala'),
+                            click: function() {
+                                window.location.hash = '#appciv/editCerereArtizanala'
+                            }
+                        }
+                    ]
+                    // click: function () {
+                    //     //window.location.hash = '#appciv/editCerereOmologare';
+                    //     app.execute('registru:cerereomologare')
+                    // }
                 },
                 {
                     icon: 'w2ui-icon-list',
@@ -192,6 +217,13 @@ var config = {
                     label: w2utils.lang('Lista'),
                     click: function () {
                         window.location.hash = '#appciv/listaCereriOmologare';
+                    }
+                },{
+                    icon: 'w2ui-icon-search',
+                    type: 'normal',
+                    label: w2utils.lang('Cauta Nr. Omologare'),
+                    click: function () {
+                        app.execute('registru:search:nrreg')
                     }
                 }]
             }, {

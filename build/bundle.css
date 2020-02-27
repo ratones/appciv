@@ -5915,7 +5915,7 @@ div#lblPageTitle {
 }
 @font-face {
   font-family: 'Oswald';
-  src: url("../../../RAR_CIV/frontend/styles/Fonts/TCCB____.ttf") format('truetype');
+  src: url("../../../../ApplicatiiNoi/RAR_CIV/RAR_CIV/frontend/styles/Fonts/TCCB____.ttf") format('truetype');
   /*    src: url('WebFont.eot?#iefix') format('embedded-opentype'),
          url('WebFont.woff') format('woff'),
          url('WebFont.ttf') format('truetype'),
@@ -6087,7 +6087,7 @@ div.heading-bar {
   /* right: 0; */
   /*z-index: 2;*/
   /* min-width: 680px; */
-  background: #ededed url("../../../RAR_CIV/frontend/styles/images/bg_fallback.png") 0 0 repeat-x;
+  background: #ededed url("../../../../ApplicatiiNoi/RAR_CIV/RAR_CIV/frontend/styles/images/bg_fallback.png") 0 0 repeat-x;
   background: -moz-linear-gradient(top, #ededed 0%, #c4c4c4 100%);
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ededed), color-stop(100%, #c4c4c4));
   background: -webkit-linear-gradient(top, #ededed 0%, #c4c4c4 100%);
@@ -6360,7 +6360,7 @@ textarea.big-text {
 
 .mid-form>fieldset {
   margin: 0 auto;
-  width: 840px;
+  width: 920px;
 }
 
 .btnAddValue,
@@ -6853,7 +6853,7 @@ label.label-checked {
   width: 284mm;
   height: 210mm;
   background: #FFFFFF;
-  background: url("../../../images/civ-600.jpg");
+  background: url("../../../../images/civ-600.jpg");
   background-size: contain;
   background-position: -19px -41px;
   background-repeat: no-repeat;
@@ -6877,7 +6877,7 @@ footer {
 
 @font-face {
   font-family: 'Tw Cen MT Condensed';
-  src: url("../../../Fonts/TCCM____.ttf") format('truetype');
+  src: url("../../../../Fonts/TCCM____.ttf") format('truetype');
   font-weight: normal;
   font-style: normal;
 }

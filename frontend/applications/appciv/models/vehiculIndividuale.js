@@ -5,6 +5,9 @@ var VehiculModel = window.Backbone.SModel.extend({
     defaults: {
         canBeDirty: true
     },
+    initialize:function(options){
+        this.is_nr_reg = options && options.is_nr_reg
+    },
     fields: function () {
         var self = this;
         var data = [];
@@ -20,7 +23,7 @@ var VehiculModel = window.Backbone.SModel.extend({
             el: '#vin',
             name: 'vin',
             type: 'text',
-            required: true
+            required: !self.is_nr_reg
 
         }, {
             el: '#nr_registru',
@@ -167,7 +170,7 @@ var VehiculModel = window.Backbone.SModel.extend({
             el: '#an_fabr',
             name: 'an_fabr',
             type: 'int',
-            required: true,
+            required: !self.is_nr_reg,
             options: {
                 min: 1960,
                 max: Number(new Date().getFullYear()) + 1
@@ -240,7 +243,7 @@ var VehiculModel = window.Backbone.SModel.extend({
             el: '#culoare',
             name: 'culoare',
             type: 'enum',
-            required: true,
+            required: !self.is_nr_reg,
             options: {
                 minLength: 0,
                 url: function () {
@@ -268,6 +271,46 @@ var VehiculModel = window.Backbone.SModel.extend({
         }, {
             el: '#serie_motor',
             name: 'serie_motor',
+            type: 'text'
+        },{
+            el: '#masa_incercare',
+            name: 'masa_incercare',
+            type: 'text'
+        },{
+            el: '#factor_deviere',
+            name: 'factor_deviere',
+            type: 'text'
+        },{
+            el: '#factor_verificare',
+            name: 'factor_verificare',
+            type: 'text'
+        },{
+            el: '#ecoinovatie',
+            name: 'ecoinovatie',
+            type: 'text'
+        },
+        {
+            el: '#reduceri_co2_nedc',
+            name: 'reduceri_co2_nedc',
+            type: 'text'
+        },
+        {
+            el: '#reduceri_co2_wltp',
+            name: 'reduceri_co2_wltp',
+            type: 'text'
+        },
+        {
+            el: '#consum_energie',
+            name: 'consum_energie',
+            type: 'text'
+        },{
+            el: '#autonomie_electric',
+            name: 'autonomie_electric',
+            type: 'text'
+        },
+        {
+            el: '#familia_interpolare',
+            name: 'familia_interpolare',
             type: 'text'
         }];
     }

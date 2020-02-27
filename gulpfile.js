@@ -30,21 +30,21 @@ gulp.task('scripts', function() {
     if (target.indexOf('--linux') !== -1) {
         base = '/home/cristi/Documents/Projects';
     } else if (target.indexOf('--win') !== -1) {
-        base = 'd:/Projects/Client/GitResources';
+        base = 'f:/Projects/Client/GitResources';
     } else if (target.indexOf('--mac') !== -1) {
         base = '/Volumes/Data/Projects';
     }  else if(target.indexOf('--remote') !== -1){
         base = 'Q/GitResources';
     }else {
-        base = 'd:/Projects/Client/GitResources';
+        base = 'f:/Projects/Client/GitResources';
     }
     var bundles = [
         'node_modules/jquery/dist/jquery.js',
         'node_modules/underscore/underscore.js',
-        'node_modules/backbone.marionette/node_modules/backbone/backbone.js',
-        'node_modules/backbone.marionette/node_modules/backbone.babysitter/lib/backbone.babysitter.js',
-        'node_modules/backbone.marionette/node_modules/backbone.wreqr/lib/backbone.wreqr.js',
-        'node_modules/backbone.marionette/lib/core/backbone.marionette.js',
+        'private_modules/backbone.marionette/node_modules/backbone/backbone.js',
+        'private_modules/backbone.marionette/node_modules/backbone.babysitter/lib/backbone.babysitter.js',
+        'private_modules/backbone.marionette/node_modules/backbone.wreqr/lib/backbone.wreqr.js',
+        'private_modules/backbone.marionette/lib/core/backbone.marionette.js',
         'node_modules/handsontable/dist/zeroclipboard/Zeroclipboard.js',
         'node_modules/handsontable/dist/handsontable.full.min.js',
         base + '/nwbundles/backbone-associate/src/backbone.associate.js',
@@ -84,14 +84,14 @@ gulp.task('css', function() {
     if (target.indexOf('--linux') !== -1) {
         base = '/home/cristi/Documents/Projects';
     } else if (target.indexOf('--win') !== -1) {
-        base = 'd:/Projects/Client/GitResources';
+        base = 'f:/Projects/Client/GitResources';
     } else if (target.indexOf('--mac') !== -1) {
         base = '/Volumes/Data/Projects';
     }
     else if(target.indexOf('--remote') !== -1){
         base = 'Q/GitResources';
     }else {
-        base = 'd:/Projects/Client/GitResources';
+        base = 'f:/Projects/Client/GitResources';
     }
     console.log(base);
     var src = [
@@ -118,7 +118,7 @@ gulp.task('watch', function() {
 
 gulp.task('compress', function() {
     return gulp.src('build/*.js')
-        .pipe(uglify())
+        //.pipe(uglify())
         .pipe(gulp.dest('dist'));
 });
 

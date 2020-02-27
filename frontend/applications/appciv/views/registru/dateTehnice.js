@@ -5,7 +5,7 @@ module.exports = Marionette.CompositeView.extend({
         'click .btnAddValue': 'addValue',
         'click .btnDelValue': 'delValue'
     },
-    initialize: function () {
+    initialize: function (options) {
         // this.listenTo(app,'dt:add:value',this.addValue.bind(this));
         // this.listenTo(app,'dt:remove:value',this.delValue.bind(this));
         var self = this;
@@ -25,6 +25,7 @@ module.exports = Marionette.CompositeView.extend({
                 window.isDirty.dirty = false;
             }
         });
+        this.copil = options.copil
     },
     getTemplate: function () {
         var coll = this.collection,
@@ -43,7 +44,8 @@ module.exports = Marionette.CompositeView.extend({
         model.set('iswltp', this.iswltp);
         return {
             type: this.options.type,
-            index: model.cid
+            index: model.cid,
+            copil:this.copil
         };
     },
     setReadOnly: function () {

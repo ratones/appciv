@@ -319,7 +319,7 @@ User.prototype.checkSession = function (callback) {
             self.set('roles', roles);
              localStorage.setItem('user',Util.encrypt(user,false));
             localStorage.setItem('roles',Util.encrypt(roles,false));
-            if (callback) callback.call();
+            // if (callback) callback.call();
         },
         error: function() {
             user.uid = 0;

@@ -2,6 +2,7 @@ module.exports = Marionette.FormView.extend({
     template: require('./../../templates/registru/general.hbs'),
     initialize: function() {
         var self = this;
+        console.log('general view show')
         // this.model.on('change', function() {
         //     self.confirmReset.apply(self, arguments);
         // });
@@ -49,9 +50,10 @@ module.exports = Marionette.FormView.extend({
     },
     onShow:function(){
         var self = this;
+        console.log('general view show')
         //this.$el.find('input').on('change',function(){self.confirmReset.apply(self,arguments);});
         this.setupView();
-        $('#producator').w2field('combo',{
+        this.$el.find('#producator').w2field('combo',{
             url:app.dotUrl + '/nrom/getProducatori',
             minLength: 1,
             selected: {

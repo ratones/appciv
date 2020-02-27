@@ -176,16 +176,41 @@ var config = {
                 type: 'normal',
                 show: function () {
                     return ipc.sendSync('user:isAuthenticated', 'appciv') && ipc.sendSync('user:request:isuserinrole', [
-                        [999], 'appciv'
+                        [1], 'appciv'
                     ]);
+                    // return false //WORK IN PROGRESS
                 },
                 submenu: [{
                     icon: 'w2ui-icon-plus',
                     type: 'normal',
                     label: w2utils.lang('Cerere noua'),
-                    click: function () {
-                        window.location.hash = '#appciv/newCerereOmol';
-                    }
+                    submenu:[
+                        {
+                            type:'normal',
+                            label: w2utils.lang('Inregistrare de Tip'),
+                            click: function() {
+                                window.location.hash = '#appciv/editCerereOmologare'
+                            }
+                        },
+                        {
+                            type:'normal',
+                            label: w2utils.lang('Omologare cu COC'),
+                            click: function() {
+                                window.location.hash = '#appciv/editCerereCOC'
+                            }
+                        },
+                        {
+                            type:'normal',
+                            label: w2utils.lang('Omologare Artizanala'),
+                            click: function() {
+                                window.location.hash = '#appciv/editCerereArtizanala'
+                            }
+                        }
+                    ]
+                    // click: function () {
+                    //     //window.location.hash = '#appciv/editCerereOmologare';
+                    //     app.execute('registru:cerereomologare')
+                    // }
                 },
                 {
                     icon: 'w2ui-icon-list',
@@ -193,6 +218,13 @@ var config = {
                     label: w2utils.lang('Lista'),
                     click: function () {
                         window.location.hash = '#appciv/listaCereriOmologare';
+                    }
+                },{
+                    icon: 'w2ui-icon-search',
+                    type: 'normal',
+                    label: w2utils.lang('Cauta Nr. Omologare'),
+                    click: function () {
+                        app.execute('registru:search:nrreg')
                     }
                 }]
             }, {
@@ -499,6 +531,33 @@ w2utils.locale(localeEN);
 
 var gui = requireNode('nw.gui');
 
+
+var low = requireNode('lowdb')
+var FileSync = requireNode('lowdb/adapters/FileSync')
+
+
+
+var adapter = new FileSync('db.json')
+var db = low(adapter)
+/**
+ * Database tests
+ */
+
+db.defaults({ posts: [], user: {}, count: 0 })
+.write()
+
+// Add a post
+db.get('posts')
+.push({ id: 1, title: 'lowdb is awesome'})
+.write()
+
+// Set a user using Lodash shorthand syntax
+db.set('user.name', 'typicode')
+.write()
+
+// Increment count
+db.update('count', n => n + 1)
+.write()
 
 //intercomm module
 var ipc = requireNode('ipc');
@@ -837,6 +896,7 @@ var start = function (error) {
             callback: function () {
                 w2utils.unlock('body');
                 User.checkSession(function () {
+                    app.controller.login('')
                     //app.controller.start();
                     // w2utils.lock('body', 'Va rugam asteptati!', true);
                 });
@@ -871,7 +931,7 @@ function update() {
 
 
 update();
-},{"./../common/en":8,"./../common/ro":9,"./../frontend/main":128,"./config":1,"./event":2,"./globals":3,"./proxy":4,"./user":6,"./util":7}],6:[function(require,module,exports){
+},{"./../common/en":8,"./../common/ro":9,"./../frontend/main":143,"./config":1,"./event":2,"./globals":3,"./proxy":4,"./user":6,"./util":7}],6:[function(require,module,exports){
 var Config = require('./config');
 var Util = require('./util');
 var Globals = require('./globals');
@@ -1193,7 +1253,7 @@ User.prototype.checkSession = function (callback) {
             self.set('roles', roles);
              localStorage.setItem('user',Util.encrypt(user,false));
             localStorage.setItem('roles',Util.encrypt(roles,false));
-            if (callback) callback.call();
+            // if (callback) callback.call();
         },
         error: function() {
             user.uid = 0;
@@ -2522,6 +2582,16 @@ var controller = window.Marionette.Controller.extend({
         });
         $(argument.element).html(atrView.render().el);
     },
+
+    renderAtributeTvv: function (argument) {
+        var AtributeAccordionView = require('./views/registru/atribute');
+        var atrView = new AtributeAccordionView({
+            collection: argument.atributes,
+            iswltp : argument.iswltp
+        });
+        $(argument.element).html(atrView.render().el);
+    },
+
     renderAnvelope: function (argument) {
         AnvelopeAccordionView = require('./views/vehicule/anvelope');
         var anvView = new AnvelopeAccordionView({
@@ -2848,12 +2918,44 @@ var controller = window.Marionette.Controller.extend({
         var IndexView = require('./views/registru/index');
         app.container.show(new IndexView({
             message: 'Hello new module!',
-            id:id
+            id:id=='new'?null:id,
+            tip:'C'
+        }));
+    },
+    editCerereIndividuale:function(id){
+        var IndexView = require('./views/registru/index');
+        app.container.show(new IndexView({
+            message: 'Hello new module!',
+            id:id=='new'?null:id,
+            tip:'C'
+        }));
+    },
+    editCerereCOC:function(id){
+        var Model = require('./models/vehiculIndividuale');
+        var m = new Model({
+            id_comanda: 0,
+            stare:1,
+            is_nr_reg:true
+        });
+        var IndexView = require('./views/registru/cerereCOC');
+        app.container.show(new IndexView({
+            message: 'Hello new module!',
+            model: m,
+            id:id=='new'?null:id,
+            tip:'C'
+        }));
+    },
+    editCerereArtizanala:function(id){
+        var IndexView = require('./views/registru/index');
+        app.container.show(new IndexView({
+            message: 'Hello new module!',
+            id:id=='new'?null:id,
+            tip:'A'
         }));
     }
 });
 module.exports = controller;
-},{"./collections/fisiere":13,"./collections/nanvelope":15,"./collections/vehicule":21,"./globals":24,"./models/cerere":27,"./models/cerereIndividuale":28,"./models/vehicul":40,"./models/vehiculIndividuale":41,"./views/cereri/editor":84,"./views/cereri/index":85,"./views/cereri/plati":86,"./views/cereri/situatie":87,"./views/home":88,"./views/individuale/editor":90,"./views/individuale/fisiere":92,"./views/individuale/index":93,"./views/individuale/mentiuni":95,"./views/individuale/operator":96,"./views/individuale/situatie":97,"./views/individuale/vehicul1":98,"./views/individuale/vehicule":99,"./views/registru/cereri":103,"./views/registru/index":107,"./views/reports/arhivare":114,"./views/reports/civdesign":115,"./views/reports/operatiiciv":116,"./views/update":117,"./views/vehicule/anvelope":119,"./views/vehicule/atribute":121,"./views/vehicule/sfarsitSerie":122,"./views/vehicule/spreadsheet":123,"./views/vehicule/vehicul":124,"./views/vehicule/vehicule":125}],24:[function(require,module,exports){
+},{"./collections/fisiere":13,"./collections/nanvelope":15,"./collections/vehicule":21,"./globals":24,"./models/cerere":27,"./models/cerereIndividuale":28,"./models/vehicul":40,"./models/vehiculIndividuale":41,"./views/cereri/editor":92,"./views/cereri/index":93,"./views/cereri/plati":94,"./views/cereri/situatie":95,"./views/home":96,"./views/individuale/editor":98,"./views/individuale/fisiere":100,"./views/individuale/index":101,"./views/individuale/mentiuni":103,"./views/individuale/operator":104,"./views/individuale/situatie":105,"./views/individuale/vehicul1":106,"./views/individuale/vehicule":107,"./views/registru/atribute":112,"./views/registru/cerereCOC":113,"./views/registru/cereri":114,"./views/registru/index":118,"./views/reports/arhivare":129,"./views/reports/civdesign":130,"./views/reports/operatiiciv":131,"./views/update":132,"./views/vehicule/anvelope":134,"./views/vehicule/atribute":136,"./views/vehicule/sfarsitSerie":137,"./views/vehicule/spreadsheet":138,"./views/vehicule/vehicul":139,"./views/vehicule/vehicule":140}],24:[function(require,module,exports){
 var globals = {
     clipboard:null,
     getClipboard:function(){
@@ -2902,7 +3004,7 @@ var AtributModel = window.Backbone.SModel.extend({
     },
     fields: function() {
         var self = this;
-        var notrequired = [28,290,291,292,293,294,295,296,297,298,299,300,301,141,142,246,247,248];
+        var notrequired = [28,290,291,292,293,294,295,296,297,298,299,300,301,141,142,246,247,248,184,304,307,309];
         return [{
             name: 'val',
             el: '#Atribute_' + self.get('index') + '__val',
@@ -3184,11 +3286,11 @@ module.exports = Backbone.SModel.extend({
     defaults: {
         cod_tip_omologare: 'W',
         tip_omologare: 'INREGISTRARE DE TIP',
-        canBeDirty:true,
-        isViewInitialized:false
+        canBeDirty: true,
+        isViewInitialized: false
     },
-    initialize:function(){
-        if(this.get('isViewInitialized')){
+    initialize: function () {
+        if (this.get('isViewInitialized')) {
 
         }
         // $('#marca').w2field().reinit();
@@ -3197,19 +3299,19 @@ module.exports = Backbone.SModel.extend({
         //     $('#versiune').w2field().reinit();
         //     $('#denumire_comerciala').w2field().reinit();
     },
-    bindEvents:function(){
+    bindEvents: function () {
         var self = this;
-        this.listenTo(this,'change:cod_tip_omologare',function(){
+        this.listenTo(this, 'change:cod_tip_omologare', function () {
             self.unset('cod_caroserie').unset('caroserie');
             $('#cod_caroserie').w2field().reinit();
         });
-        this.listenTo(this,'change:categorie',function(e){
-            if(!self.get('nr_registru')){
+        this.listenTo(this, 'change:categorie', function (e) {
+            if (!self.get('nr_registru')) {
                 self.unset('cod_categorie').unset('categorie_folosinta');
                 $('#cod_categorie').w2field().reinit();
             }
         });
-        this.listenTo(this,'change:cod_categorie',function(){
+        this.listenTo(this, 'change:cod_categorie', function () {
             self.unset('cod_caroserie').unset('caroserie');
             $('#cod_caroserie').w2field().reinit();
             $('#id_clasa').w2field().reinit();
@@ -3218,28 +3320,48 @@ module.exports = Backbone.SModel.extend({
         //     self.unset('marca').unset('cod_marca');
         //     $('#marca').w2field().reinit();
         // });
-        this.listenTo(this,'change:marca',function(){
-            self.unset('tip').unset('cod_tip');
-            $('#tip').w2field().reinit();
+        this.listenTo(this, 'change:marca', function () {
+            // self.unset('tip').unset('cod_tip');
+            // $('#tip').w2field().reinit();
         });
-        this.listenTo(this,'change:tip',function(){
-            self.unset('varianta').unset('cod_varianta');
-            $('#varianta').w2field().reinit();
+        this.listenTo(this, 'change:tip', function () {
+            // self.unset('varianta').unset('cod_varianta');
+            // $('#varianta').w2field().reinit();
         });
-        this.listenTo(this,'change:varianta',function(){
-            self.unset('versiune').unset('cod_versiune');
-            $('#versiune').w2field().reinit();
+        this.listenTo(this, 'change:varianta', function () {
+            // self.unset('versiune').unset('cod_versiune');
+            // $('#versiune').w2field().reinit();
         });
-        this.listenTo(this,'change:versiune',function(){
-            self.unset('denumire_comerciala');
-            $('#denumire_comerciala').w2field().reinit();
+        this.listenTo(this, 'change:versiune', function () {
+            // self.unset('denumire_comerciala');
+            // $('#denumire_comerciala').w2field().reinit();
         });
     },
-    fields: function() {
+    fields: function () {
         var self = this;
         var tipomol = [
-            {id:'W',text:'INREGISTRARE DE TIP'},
-            {id:'Y',text:'INREGISTRARE DE TIP(TIP NOU)'}
+            { id: 'W', text: 'INREGISTRARE DE TIP' },
+            { id: 'Y', text: 'INREGISTRARE DE TIP (TIP NOU)' },
+            { id: '1', text: 'ATESTAT TEHNIC (TIP NOU)'},
+            { id: '4', text: ' '},
+            { id: '5', text: ' '},
+            { id: '6', text: 'CONSTATARE TEHNICA'},
+            { id: '7', text: 'VERIFICARE TEHNICA'},
+            { id: 'B', text: 'OMOLOGARE ARTIZANALA'},
+            { id: 'C', text: 'OMOLOGARE CU COC'},
+            { id: 'D', text: 'OMOLOGARE SCHIMBARE CAROSERIE'},
+            { id: 'E', text: 'OMOLOGARE CU COC (TIP NOU)'},
+            { id: 'G', text: 'OMOLOGARE FARA COC (TIP NOU)'},
+            { id: 'H', text: 'OMOLOGARE SCHIMBARE CAROSERIE (TIP NOU)'},
+            { id: 'J', text: 'OMOLOGARE FARA COC'},
+            { id: 'K', text: 'OMOLOGARE ARTIZANALA (TIP NOU)'},
+            { id: 'N', text: 'OMOLOGARE SCHIMBARE MOTOR'},
+            { id: 'P', text: 'OMOLOGARE MULTIETAPA (TIP NOU)'},
+            { id: 'R', text: 'OMOLOGARE MULTIETAPA'},
+            { id: 'U', text: 'OMOLOGARE TIP'},
+            { id: 'V', text: 'OMOLOGARE TIP (TIP NOU)'},
+            { id: 'X', text: 'ATESTAT TEHNIC'},
+            { id: 'Z', text: 'OMOLOGARE SCHIMBARE MOTOR (TIP NOU)'}
         ];
         var fields = [
             // {
@@ -3287,9 +3409,9 @@ module.exports = Backbone.SModel.extend({
                 el: '#cod_tip_omologare',
                 type: 'list',
                 options: {
-                    items:tipomol,
+                    items: tipomol,
                     minLength: 0,
-                    onChange: function(e) {
+                    onChange: function (e) {
                         var selected = e.item;
                         self.set('cod_tip_omologare', selected.id);
                         self.set('tip_omologare', selected.text);
@@ -3305,20 +3427,58 @@ module.exports = Backbone.SModel.extend({
                 el: '#nr_registru',
                 type: 'text'
             }, {
-                name: 'wvta',
                 el: '#wvta',
-                type: 'text'
+                name: 'wvta',
+                type: 'combo',
+                //required:self.get('tip_cerere')===9,
+                options: {
+                    url: app.dotUrl + '/nrom/getwvta',
+                    minLength: 0,
+                    cascadeTo: ['#extensie','#categorie','#cod_categorie','#cod_caroserie','#tip','#varianta','#versiune'] ,
+                },
+                selected: {
+                    id: self.get('id_wvta'),
+                    text: self.get('wvta')
+                },
+
+                
+                idField: 'id_wvta',
+                txtField: 'wvta'
+                // change: function(e) {
+                //     var selected = $('#wvta').data('selected');
+                //     self.set('data_wvta', selected.data_wvta);
+                // }
             }, {
-                name: 'cnot',
-                el: '#cnot',
-                type: 'text'
+                el: '#extensie',
+                name: 'extensie',
+                type: 'combo',
+                ///required: true,
+                options: {
+                    minLength: 0,
+                    url: function () {
+                        return app.dotUrl + '/nrom/getListExtensiiWVTA';
+                    },
+                    postData: function () {
+                        return {
+                            id_wvta: self.get('id_wvta') || '0',
+                        };
+                    },
+                    cascadeTo: ['#categorie','#cod_categorie','#cod_caroserie','#tip','#varianta','#versiune']
+                },
+                selected: {
+                    id: self.get('id_extensie'),
+                    text: self.get('extensie')
+                },
+                // change: function () {
+                //     var selected = $('#id_extensie').data('selected');
+                //     self.set('extensie', selected.text);
+                //     self.set('id_extensie', selected.id);
+                // },
+                idField: 'id_extensie',
+                txtField: 'extensie'
             }, {
                 name: 'observatii',
                 el: '#observatii',
-                type: 'text'
-            }, {
-                name: 'extensie',
-                el: '#extensie',
                 type: 'text'
             }, {
                 name: 'categorie',
@@ -3326,21 +3486,21 @@ module.exports = Backbone.SModel.extend({
                 type: 'enum',
                 required: true,
                 options: {
-                    url: function() {
+                    url: function () {
                         return app.dotUrl + '/nrom/getcategeu';
                     },
                     minLength: 0,
                     // selected:self.get('categorie'),
-                    selected: self.get('categorie')?self.get('categorie').split('|'):'',
-                    onChange:function(e){
+                    selected: self.get('categorie') ? self.get('categorie').split('|') : '',
+                    onChange: function (e) {
                         var selected = $(e.target).data('selected');
                         console.log(selected);
-                        if(selected.length <= 0 && !self.get('categorie')) return;
+                        if (selected.length <= 0 && !self.get('categorie')) return;
                         var val = '';
-                        selected.map(function(el){
+                        selected.map(function (el) {
                             val += '|' + el.text;
                         });
-                        self.set('categorie', val.substr(1,val.length));
+                        self.set('categorie', val.substr(1, val.length));
                     }
                 }
             }, {
@@ -3349,9 +3509,9 @@ module.exports = Backbone.SModel.extend({
                 type: 'list',
                 options: {
                     url: app.dotUrl + '/nrom/getcategfol',
-                    postData: function() {
+                    postData: function () {
                         return {
-                            cateu: self.get('categorie').split('|')[0]
+                            cateu: self.get('categorie') ? self.get('categorie').split('|')[0] : ''
                         };
                     },
                     minLength: 0,
@@ -3359,8 +3519,8 @@ module.exports = Backbone.SModel.extend({
                         id: self.get('cod_categorie'),
                         text: self.get('categorie_folosinta')
                     },
-                    onChange:function(e){
-                        self.set('cod_categorie',e.item.id).set('categorie_folosinta', e.item.text);
+                    onChange: function (e) {
+                        self.set('cod_categorie', e.item.id).set('categorie_folosinta', e.item.text);
                     }
                 },
                 required: true
@@ -3371,7 +3531,7 @@ module.exports = Backbone.SModel.extend({
                 options: {
                     url: app.dotUrl + '/nrom/getclase',
                     minLength: 0,
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie')
                         };
@@ -3380,8 +3540,8 @@ module.exports = Backbone.SModel.extend({
                         id: self.get('id_clasa'),
                         text: self.get('clasa')
                     },
-                    onChange:function(e){
-                        self.set('id_clasa',e.item.id).set('clasa', e.item.text);
+                    onChange: function (e) {
+                        self.set('id_clasa', e.item.id).set('clasa', e.item.text);
                     }
                 }
             }, {
@@ -3390,9 +3550,9 @@ module.exports = Backbone.SModel.extend({
                 type: 'list',
                 options: {
                     url: app.dotUrl + '/nrom/getcaroserii',
-                    postData: function() {
+                    postData: function () {
                         return {
-                            tip_omol:self.get('cod_tip_omologare'),
+                            tip_omol: self.get('cod_tip_omologare'),
                             cat_fol: self.get('cod_categorie')
                         };
                     },
@@ -3402,8 +3562,8 @@ module.exports = Backbone.SModel.extend({
                         id: self.get('cod_caroserie'),
                         text: self.get('caroserie')
                     },
-                    onChange:function(e){
-                        self.set('cod_caroserie',e.item.id).set('caroserie', e.item.text);
+                    onChange: function (e) {
+                        self.set('cod_caroserie', e.item.id).set('caroserie', e.item.text);
                     }
                 },
                 required: true
@@ -3413,7 +3573,7 @@ module.exports = Backbone.SModel.extend({
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/getmarci',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie')
@@ -3430,22 +3590,22 @@ module.exports = Backbone.SModel.extend({
                 //         self.set('cod_marca',selected.id).set('marca', selected.text);
                 // },
                 required: true,
-                idField:'cod_marca',
-                txtField:'marca'
+                idField: 'cod_marca',
+                txtField: 'marca'
             }, {
                 name: 'tip',
                 el: '#tip',
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/gettipuri',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie'),
                             cod_marca: self.get('cod_marca')
                         };
                     },
-                    renderDrop: function(e) {
+                    renderDrop: function (e) {
                         return '<td>' + e.id + '</td><td>' + e.text + '</td>';
                     },
                     minLength: 0,
@@ -3460,15 +3620,15 @@ module.exports = Backbone.SModel.extend({
                 //     self.set('cod_tip',selected.id).set('tip', selected.text);
                 // },
                 required: true,
-                idField:'cod_tip',
-                txtField:'tip'
+                idField: 'cod_tip',
+                txtField: 'tip'
             }, {
                 name: 'varianta',
                 el: '#varianta',
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/getvariante',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie'),
@@ -3476,7 +3636,7 @@ module.exports = Backbone.SModel.extend({
                             cod_tip: self.get('cod_tip')
                         };
                     },
-                    renderDrop: function(e) {
+                    renderDrop: function (e) {
                         return '<td>' + e.id + '</td><td>' + e.text + '</td>';
                     },
                     minLength: 0,
@@ -3491,15 +3651,15 @@ module.exports = Backbone.SModel.extend({
                 //     self.set('cod_varianta',selected.id).set('varianta', selected.text);
                 // },
                 required: true,
-                idField:'cod_varianta',
-                txtField:'varianta'
+                idField: 'cod_varianta',
+                txtField: 'varianta'
             }, {
                 name: 'versiune',
                 el: '#versiune',
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/getversiuni',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie'),
@@ -3508,7 +3668,7 @@ module.exports = Backbone.SModel.extend({
                             cod_varianta: self.get('cod_varianta')
                         };
                     },
-                    renderDrop: function(e) {
+                    renderDrop: function (e) {
                         return '<td>' + e.id + '</td><td>' + e.text + '</td>';
                     },
                     minLength: 1,
@@ -3518,7 +3678,7 @@ module.exports = Backbone.SModel.extend({
                         text: self.get('versiune')
                     }
                 },
-                change:function(e){
+                change: function (e) {
                     var selected = $(e.currentTarget).data('selected');
                     // self.set('cod_versiune', selected.id).set('versiune',selected.text);
                     $.post(app.dotUrl + '/nrom/checktvv', {
@@ -3526,15 +3686,15 @@ module.exports = Backbone.SModel.extend({
                         varianta: self.get('varianta'),
                         versiune: self.get('versiune'),
                         wvta: self.get('wvta')
-                    }, function(response) {
+                    }, function (response) {
                         if (response !== 0) {
                             w2confirm('Acest TVV exista in baza de date la acest WVTA!<br>Doriti sa continuati cu datele introduse?')
-                                .yes(function() {
-                                    $.get(app.dotUrl + '/nrom/getTvvExistent/' + response, null, function(tvv) {
-                                        if(tvv.nr_registru){
-                                            app.trigger('dosare:reloadTVV',tvv);
-                                        }else{
-                                            app.trigger('dosare:reloadTVV',tvv);
+                                .yes(function () {
+                                    $.get(app.dotUrl + '/nrom/getTvvExistent/' + response, null, function (tvv) {
+                                        if (tvv.nr_registru) {
+                                            app.trigger('dosare:reloadTVV', tvv);
+                                        } else {
+                                            app.trigger('dosare:reloadTVV', tvv);
                                             //  self.set('id',tvv.id)
                                             //         .set('denumire_comerciala',tvv.denumire_comerciala)
                                             //         .set('nr_axe',tvv.nr_axe)
@@ -3542,7 +3702,7 @@ module.exports = Backbone.SModel.extend({
                                         }
                                     });
                                 })
-                                .no(function() {
+                                .no(function () {
                                     self.unset('varianta').unset('cod_varianta').unset('versiune').unset('cod_versiune');
                                     $('#varianta').w2field().reinit();
                                     $('#varianta').w2field().reinit();
@@ -3550,8 +3710,8 @@ module.exports = Backbone.SModel.extend({
                         }
                     });
                 },
-                idField:'cod_versiune',
-                txtField:'versiune',
+                idField: 'cod_versiune',
+                txtField: 'versiune',
                 required: true
             }, {
                 name: 'denumire_comerciala',
@@ -3559,7 +3719,7 @@ module.exports = Backbone.SModel.extend({
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/gettipcom',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie'),
@@ -3574,8 +3734,8 @@ module.exports = Backbone.SModel.extend({
                         id: self.get('denumire_comerciala'),
                         text: self.get('denumire_comerciala')
                     },
-                    onChange:function(){
-                        self.set('denumire_comerciala', e.item.id).set('denumire_comerciala',e.item.text);
+                    onChange: function () {
+                        self.set('denumire_comerciala', e.item.id).set('denumire_comerciala', e.item.text);
                     }
                 },
                 required: true
@@ -3602,25 +3762,25 @@ module.exports = Backbone.SModel.extend({
                                 text: self.get('antipoluare')
                             }
                         }, */
-           // {
-           //     name: 'producator',
-           //     el: '#producator',
-           //     type: 'text',
-                // options: {
-                //     url: app.dotUrl + '/nrom/getProducatori',
-                //     postData: function() {
-                //         return {
-                //             categorie: self.get('categorie')
-                //         };
-                //     },
-                //     minLength: 1,
-                //     selected: {
-                //         id: self.get('producator'),
-                //         text: self.get('producator')
-                //     }
-                // },
+            // {
+            //     name: 'producator',
+            //     el: '#producator',
+            //     type: 'text',
+            // options: {
+            //     url: app.dotUrl + '/nrom/getProducatori',
+            //     postData: function() {
+            //         return {
+            //             categorie: self.get('categorie')
+            //         };
+            //     },
+            //     minLength: 1,
+            //     selected: {
+            //         id: self.get('producator'),
+            //         text: self.get('producator')
+            //     }
+            // },
             //    required: true
-           // }
+            // }
             /* {
                             el: '#abs',
                             name: 'abs',
@@ -3662,7 +3822,7 @@ var TVVModel = require('./tvv')
 var SetDateTVVModel = require('./setdatetehnice')
 
 var TVVExtensieCerere =  Backbone.SModel.extend({
-    urlRoot: app.baseUrl + '/doiit/GetTVVExtensieCerere',
+    urlRoot: app.baseUrl + 'doiit/GetTVVExtensieCerere',
     fields: function() {
         return [{
             name: 'SetDateTVV',
@@ -3671,7 +3831,12 @@ var TVVExtensieCerere =  Backbone.SModel.extend({
             name: 'TVV',
             type: 'model'
         }];
-    }
+    },
+    // initialize:function(){
+    //     console.log('init set date tvv')
+    //     this.attributes.TVV = new TVVModel()
+    //     this.attributes.SetDateTVV = new SetDateTVVModel()
+    // }
 });
 
 Backbone.associate(TVVExtensieCerere, {
@@ -3977,6 +4142,9 @@ var VehiculModel = window.Backbone.SModel.extend({
     defaults: {
         canBeDirty: true
     },
+    initialize:function(options){
+        this.is_nr_reg = options && options.is_nr_reg
+    },
     fields: function () {
         var self = this;
         var data = [];
@@ -3992,7 +4160,7 @@ var VehiculModel = window.Backbone.SModel.extend({
             el: '#vin',
             name: 'vin',
             type: 'text',
-            required: true
+            required: !self.is_nr_reg
 
         }, {
             el: '#nr_registru',
@@ -4139,7 +4307,7 @@ var VehiculModel = window.Backbone.SModel.extend({
             el: '#an_fabr',
             name: 'an_fabr',
             type: 'int',
-            required: true,
+            required: !self.is_nr_reg,
             options: {
                 min: 1960,
                 max: Number(new Date().getFullYear()) + 1
@@ -4212,7 +4380,7 @@ var VehiculModel = window.Backbone.SModel.extend({
             el: '#culoare',
             name: 'culoare',
             type: 'enum',
-            required: true,
+            required: !self.is_nr_reg,
             options: {
                 minLength: 0,
                 url: function () {
@@ -4240,6 +4408,46 @@ var VehiculModel = window.Backbone.SModel.extend({
         }, {
             el: '#serie_motor',
             name: 'serie_motor',
+            type: 'text'
+        },{
+            el: '#masa_incercare',
+            name: 'masa_incercare',
+            type: 'text'
+        },{
+            el: '#factor_deviere',
+            name: 'factor_deviere',
+            type: 'text'
+        },{
+            el: '#factor_verificare',
+            name: 'factor_verificare',
+            type: 'text'
+        },{
+            el: '#ecoinovatie',
+            name: 'ecoinovatie',
+            type: 'text'
+        },
+        {
+            el: '#reduceri_co2_nedc',
+            name: 'reduceri_co2_nedc',
+            type: 'text'
+        },
+        {
+            el: '#reduceri_co2_wltp',
+            name: 'reduceri_co2_wltp',
+            type: 'text'
+        },
+        {
+            el: '#consum_energie',
+            name: 'consum_energie',
+            type: 'text'
+        },{
+            el: '#autonomie_electric',
+            name: 'autonomie_electric',
+            type: 'text'
+        },
+        {
+            el: '#familia_interpolare',
+            name: 'familia_interpolare',
             type: 'text'
         }];
     }
@@ -4288,7 +4496,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div class=\"w2ui-page page-0 modalContent big-form\" style=\"min-width: 1000px;\">\r\n    <fieldset class=\"date-civ\">\r\n        <legend>Date vehicul</legend>\r\n    	<div class=\"w2ui-field\" style=\"float:left\">\r\n            <label>Categorie:</label>\r\n            <div><input type=\"text\"  id=\"cat\" readonly/></div>\r\n        </div>\r\n        <div class=\"w2ui-field\" >\r\n            <label>Caroserie:</label>\r\n            <div><input type=\"text\"  id=\"tip_caros\" readonly/></div>\r\n        </div>\r\n        <div class=\"w2ui-field\" style=\"float:left\">\r\n            <label>Marca:</label>\r\n            <div><input type=\"text\"  id=\"marca\" readonly/></div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Tip/Varianta/Versiune:</label>\r\n            <div><input type=\"text\"  id=\"tip_compus\" readonly/></div>\r\n        </div>\r\n         <div class=\"w2ui-field\" style=\"float:left\">\r\n            <label>Nr. Registru:</label>\r\n            <div><input type=\"text\"  id=\"nr_registr\" readonly/></div>\r\n        </div>\r\n         <div class=\"w2ui-field\">\r\n            <label>WVTA:</label>\r\n            <div><input type=\"text\"  id=\"wvta\" readonly/></div>\r\n        </div>\r\n        <fieldset class=\"tehnic-civ\">\r\n        	<legend>Mase</legend>\r\n        	<table>\r\n        		<tr>\r\n        			<td>Proprie:</td><td><input readonly type=\"text\" id=\"masa\"></td>\r\n        			<td>Utila:</td><td><input readonly type=\"text\" id=\"masutil\"></td>\r\n        			<td>Carlig:</td><td><input readonly type=\"text\" id=\"mascr\"></td>\r\n        			<td>Totala:</td><td><input readonly type=\"text\" id=\"masa_total\"></td>\r\n        			<td>Axa fata:</td><td><input readonly type=\"text\" id=\"masf\"></td>\r\n        			<td>Axa spate:</td><td><input readonly type=\"text\" id=\"mass\"></td>\r\n        		</tr>\r\n        		<tr>\r\n        			<td colspan=\"3\">Remorcabila cu franare:</td><td colspan=\"3\"><input readonly type=\"text\" id=\"masrecf\"></td>\r\n        			<td colspan=\"3\">Remorcabila fara franare:</td><td colspan=\"3\"><input readonly type=\"text\" id=\"masrec\"></td>\r\n        		</tr>\r\n        	</table>\r\n        </fieldset>\r\n        <fieldset class=\"tehnic-civ\">\r\n        	<legend>Locuri</legend>\r\n        	<table>\r\n        		<tr>\r\n        			<td>Total:</td><td><input readonly type=\"text\" id=\"locuri\"></td>\r\n        			<td>Fata:</td><td><input readonly type=\"text\" id=\"focurif\"></td>\r\n        			<td>Scaune:</td><td><input readonly type=\"text\" id=\"locurisc\"></td>\r\n        			<td>Picioare:</td><td><input readonly type=\"text\" id=\"locuripi\"></td>\r\n        		</tr>\r\n        	</table>\r\n        </fieldset>\r\n         <fieldset class=\"tehnic-civ\">\r\n        	<legend>Dimensiuni</legend>\r\n        	<table>\r\n        		<tr>\r\n        			<td>Lungime:</td><td><input readonly type=\"text\" id=\"lungmax\"></td>\r\n        			<td>Latime:</td><td><input readonly type=\"text\" id=\"latmax\"></td>\r\n        			<td>Inaltime:</td><td><input readonly type=\"text\" id=\"hmax\"></td>\r\n        		</tr>\r\n        	</table>\r\n        </fieldset>\r\n        <fieldset class=\"tehnic-civ\">\r\n        	<legend>Motor</legend>\r\n        	<table>\r\n        		<tr>\r\n        			<td>Cod:</td><td><input readonly type=\"text\" id=\"cod\" class=\"large\"></td>\r\n        			<td>Cilindree:</td><td><input readonly type=\"text\" id=\"cilindree\"></td>\r\n        			<td>Putere(kW):</td><td><input readonly type=\"text\" id=\"p_max_kw\"></td>\r\n        			<td>Turatie:</td><td><input readonly type=\"text\" id=\"rot_p_max\"></td>\r\n        		</tr>\r\n        		<tr>\r\n        			<td>Combustibil:</td><td><input readonly type=\"text\" id=\"combustib\" class=\"large\"></td>\r\n        			<td>Vit. max:</td><td><input readonly type=\"text\" id=\"vitezamax\"></td>\r\n        			<td>Zgomot mers:</td><td><input readonly type=\"text\" id=\"sonext\"></td>\r\n        			<td>Zgomot stat.:</td><td><input readonly type=\"text\" id=\"sonexts\"></td>\r\n        		</tr>\r\n        	</table>\r\n        </fieldset>\r\n        <fieldset class=\"tehnic-civ\">\r\n        	<legend>Alte date</legend>\r\n        	<table>\r\n        		<tr>\r\n        			<td>Rezervor:</td><td><input readonly type=\"text\" id=\"rezervor\"></td>\r\n        			<td>Tractiune:</td><td><input readonly type=\"text\" id=\"tractiune\" class=\"large\"</td>\r\n        		</tr>\r\n        	</table>\r\n        </fieldset>\r\n        <fieldset class=\"tehnic-civ\">\r\n        	<legend>Anvelope</legend>\r\n        	<table>\r\n        		<tr>\r\n        			<td>Axa fata:</td><td><input readonly type=\"text\" id=\"anvelopa\" class=\"large\"></td>\r\n        			<td>Axa spate:</td><td><input readonly type=\"text\" id=\"roatas\" class=\"large\"></td>\r\n        		</tr>\r\n        		<tr>\r\n        			<td>Tolerate fata:</td><td><input readonly type=\"text\" id=\"anvel_toler_fata\" class=\"large\"></td>\r\n        			<td>Tolerate spate:</td><td><input readonly type=\"text\" id=\"anvel_toler_spate\" class=\"large\"></td>\r\n        		</tr>\r\n        	</table>\r\n        </fieldset>\r\n    </fieldset>\r\n    <fieldset class=\"date-civ\">\r\n    	<legend>Date identificare</legend>\r\n    	<table>\r\n    		<tr>\r\n    			<td>\r\n	    			<div class=\"w2ui-field\">\r\n			            <label>Nr. Identificare:</label>\r\n			            <div><input type=\"text\"  id=\"vin1\"/><input type=\"text\"  id=\"nr_identif\" style=\"display:none\"/></div>\r\n	         		</div>\r\n         		</td>\r\n         		<td rowspan=\"3\">\r\n    				<div class=\"w2ui-field\">\r\n			            <label>Mentiuni:</label>\r\n			            <div><textarea readonly id=\"mentiuni\"></textarea></div>\r\n			        </div>\r\n    			</td>\r\n         	</tr>\r\n         	<tr>\r\n    			<td>\r\n			         <div class=\"w2ui-field\">\r\n			            <label>Serie motor:</label>\r\n			            <div><input readonly type=\"text\"  id=\"serie_mot\" style=\"width:150px\"/></div>\r\n			        </div>    				\r\n    			</td>\r\n    		</tr>\r\n    		<tr>\r\n    			<td>\r\n			        <div class=\"w2ui-field\">\r\n			            <label>Culoare:</label>\r\n			            <div><input readonly type=\"text\"  id=\"cul\"/></div>\r\n			        </div>\r\n    			</td>\r\n    		</tr>\r\n    	</table>  \r\n    </fieldset>\r\n    <fieldset class=\"date-civ\">\r\n    	<legend>Arhivare CIV si Folie</legend>\r\n    	<div class=\"w2ui-field\">\r\n            <label>Serie CIV:</label>\r\n            <div><input type=\"text\"  id=\"serieciv\" tabindex=\"1\" autofocus /><input type=\"text\"  id=\"serie_civ\" style=\"display:none\"/></div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Serie Folie:</label>\r\n            <div><input type=\"text\"  id=\"folie_civ\" tabindex=\"2\" /></div>\r\n        </div>\r\n    </fieldset>\r\n</div>\r\n<div class=\"w2ui-buttons\" id=\"buttons_container\">\r\n    <div  id=\"operation_container\">\r\n        <button title=\"Salvare\" class=\"btn btn-green\" id=\"btnSave\"><i class=\"w2ui-icon-save\" tabindex=\"3\"></i> Salveaza\r\n        </button>\r\n        <button title=\"Inchide\" class=\"btn btn-default\" id=\"btnClose\"><i class=\"w2ui-icon-cross\"></i> Inchide\r\n        </button>\r\n    </div>\r\n    <div  id=\"supervize_container\" style=\"margin-top:5px;\">\r\n        <button id=\"btnFirst\">|<</button>\r\n        <button id=\"btnPrev\"><</button>\r\n        <label id=\"currentIndex\" style=\"width:50px\"></label> din <label id=\"totalciv\" style=\"width:50px\"></label>\r\n        <button id=\"btnNext\">></button>\r\n        <button id=\"btnLast\">>|</button>\r\n    </div>\r\n</div>";
   });
 
-},{"hbsfy/runtime":153}],45:[function(require,module,exports){
+},{"hbsfy/runtime":168}],45:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4300,7 +4508,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "    <div class=\"w2ui-page page-0 modalContent\" >\r\n    <div id=\"daterar_container\">\r\n        <div class=\"w2ui-field\">\r\n            <label>Nr. inregistrare RAR</label>\r\n            <div>\r\n                <input type=\"text\" id=\"id\" name=\"id\" readonly size=\"30\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Data Inregistrare</label>\r\n            <div>\r\n                <input type=\"text\" id=\"data_comanda\" name=\"data_comanda\" class=\"datepicker\" readonly size=\"30\"/>\r\n            </div>\r\n        </div>\r\n    </div>\r\n    <div id=\"date_beneficiar_container\">\r\n        <div class=\"w2ui-field\">\r\n            <label>Beneficiar</label>\r\n            <div>\r\n                <input type=\"text\" id=\"societate\" name=\"societate\" size=\"30\" readonly/>\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field form-group form-select3\" id=\"addBeneficiar\" style=\"display: none\">\r\n            <label>Beneficiar</label>\r\n            <div>\r\n                <input type=\"text\" id=\"id_beneficiar\" name=\"id_beneficiar\" size=\"30\" />\r\n            </div>\r\n        </div>\r\n    </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Nr. registru client</label>\r\n            <div>\r\n                <input type=\"text\" id=\"nr_inreg_soc\" name=\"nr_inreg_soc\" size=\"30\" placeholder=\"Cerere client...\" required />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Data registru client</label>\r\n            <div>\r\n                <input type=\"text\" id=\"data_inreg\" name=\"data_inreg\" size=\"30\" class=\"datepicker\" placeholder=\"Data Cerere client...\" />\r\n            </div>\r\n        </div>\r\n\r\n\r\n    </div>\r\n    <div class=\"w2ui-buttons button-translate\">\r\n        <button title=\"Renunta\"  name=\"cancel\" id=\"btnCancelEdit\" class=\"btn btn-red\" >Inchide</button>\r\n        <button title=\"Salvare\" id=\"btnSaveComanda\" class=\"btn btn-blue\" name=\"save\">Salveaza</button>\r\n    </div>";
   });
 
-},{"hbsfy/runtime":153}],46:[function(require,module,exports){
+},{"hbsfy/runtime":168}],46:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4312,7 +4520,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div style=\"display:none\">\r\n	<input id=\"fileupload\" type=\"file\" class=\"file\" name=\"files[]\" multiple  accept=\".xml\">\r\n</div>\r\n<div id=\"grid\" class=\"page\"></div>";
   });
 
-},{"hbsfy/runtime":153}],47:[function(require,module,exports){
+},{"hbsfy/runtime":168}],47:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4324,7 +4532,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"grid\" class=\"page\"></div>\r\n<input style=\"display:none;\" id=\"dialog\" type=\"file\" nwsaveas=\"plati.xls\" />";
   });
 
-},{"hbsfy/runtime":153}],48:[function(require,module,exports){
+},{"hbsfy/runtime":168}],48:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4336,7 +4544,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"grid\" class=\"page\"></div>\r\n<input style=\"display:none;\" id=\"dialog\" type=\"file\" nwsaveas=\"situatie.xls\" />\r\n";
   });
 
-},{"hbsfy/runtime":153}],49:[function(require,module,exports){
+},{"hbsfy/runtime":168}],49:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4353,7 +4561,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],50:[function(require,module,exports){
+},{"hbsfy/runtime":168}],50:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4365,7 +4573,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div class=\"w2ui-page page-0  modalContent\">\r\n    <div class=\"w2ui-field\" >\r\n        <label>Axa fata:</label>\r\n        <div><input type=\"text\" id=\"id_roataf\"></div>\r\n    </div>\r\n    <div class=\"w2ui-field\" >\r\n         <label>Idem spate:</label>\r\n        <div><input type=\"checkbox\"   id=\"idemspate\"></div>\r\n    </div>\r\n\r\n    <div class=\"w2ui-field\" >\r\n        <label>Axa spate:</label>\r\n        <div><input type=\"text\" id=\"id_roatas\"></div>\r\n    </div>\r\n</div>\r\n <hr>\r\n    <div class=\"w2ui-buttons button-translate\">\r\n        <button class=\"btn btn-blue save-anvelopa\"><i class=\"fa fa-save\"></i> Salveaza</button>\r\n        <button class=\"btn btn-red cancel-anvelopa\"><i class=\"fa fa-times\"></i> Renunta</button>\r\n    </div>";
   });
 
-},{"hbsfy/runtime":153}],51:[function(require,module,exports){
+},{"hbsfy/runtime":168}],51:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4377,7 +4585,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "    <div class=\"w2ui-page page-0 modalContent\" >\r\n    <div id=\"daterar_container\">\r\n        <div class=\"w2ui-field\">\r\n            <label>Nr. inregistrare RAR</label>\r\n            <div>\r\n                <input type=\"text\" id=\"id\" name=\"id\" readonly size=\"30\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Data Inregistrare</label>\r\n            <div>\r\n                <input type=\"text\" id=\"data_comanda\" name=\"data_comanda\" class=\"datepicker\" readonly size=\"30\"/>\r\n            </div>\r\n        </div>\r\n    </div>\r\n    <div id=\"date_beneficiar_container\">\r\n        <div class=\"w2ui-field\">\r\n            <label>Beneficiar</label>\r\n            <div>\r\n                <input type=\"text\" id=\"societate\" name=\"societate\" size=\"30\" readonly/>\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field form-group form-select3\" id=\"addBeneficiar\" style=\"display: none\">\r\n            <label>Beneficiar</label>\r\n            <div>\r\n                <input type=\"text\" id=\"id_beneficiar\" name=\"id_beneficiar\" size=\"30\" />\r\n            </div>\r\n        </div>\r\n    </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Reprezentanta judet:</label>\r\n            <div>\r\n                <input type=\"text\" id=\"cod_judet\" name=\"cod_judet\" size=\"30\"/>\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Nr. registru client</label>\r\n            <div>\r\n                <input type=\"text\" id=\"nr_inreg_soc\" name=\"nr_inreg_soc\" size=\"30\" placeholder=\"Cerere client...\" required />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Data registru client</label>\r\n            <div>\r\n                <input type=\"text\" id=\"data_inreg\" name=\"data_inreg\" size=\"30\" class=\"datepicker\" placeholder=\"Data Cerere client...\" />\r\n            </div>\r\n        </div>\r\n\r\n\r\n    </div>\r\n    <div class=\"w2ui-buttons button-translate\">\r\n        <button title=\"Renunta\"  name=\"cancel\" id=\"btnCancelEdit\" class=\"btn btn-red\" >Inchide</button>\r\n        <button title=\"Salvare\" id=\"btnSaveComanda\" class=\"btn btn-blue\" name=\"save\">Salveaza</button>\r\n    </div>";
   });
 
-},{"hbsfy/runtime":153}],52:[function(require,module,exports){
+},{"hbsfy/runtime":168}],52:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4398,7 +4606,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],53:[function(require,module,exports){
+},{"hbsfy/runtime":168}],53:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4410,7 +4618,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"grid\" class=\"page\"></div>";
   });
 
-},{"hbsfy/runtime":153}],54:[function(require,module,exports){
+},{"hbsfy/runtime":168}],54:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4422,7 +4630,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div style=\"display:flex\">\r\n    <input  type=\"text\" name=\"text\" maxlength=\"50\"  />\r\n    <button name=\"delMentiune\" class=\"btn btn-red\"><i class=\"w2ui-icon-cross\"></i></button>\r\n    <button name=\"anvMentiune\" class=\"btn btn-green\"><i class=\"w2ui-icon-columns\"></i></button>\r\n</div>";
   });
 
-},{"hbsfy/runtime":153}],55:[function(require,module,exports){
+},{"hbsfy/runtime":168}],55:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4431,11 +4639,11 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   var buffer = "";
 
 
-  buffer += "<div id=\"vehiculTemplate\" class=\"form-model\" style=\"width:100%;margin:0 auto;height:100%\">\r\n    <input type='hidden' name=\"id\" id=\"id\" data-bind=\"value:id\" />\r\n    <input type=\"hidden\" name=\"id_comanda\" data-bind=\"value:id_comanda\" />\r\n        <div style=\"height:100%;min-width: 500px\" id=\"date_principale\">\r\n        <fieldset>\r\n            <legend>Date vehicul</legend>\r\n            <div class=\"w2ui-field\">\r\n                <label>VIN:</label>\r\n                <div><input type='text'  id=\"vin\" maxlength=\"17\" style=\"text-transform: uppercase\"/></div>\r\n            </div>\r\n            \r\n            <div class=\"w2ui-field\">\r\n                <label >WVTA:</label>\r\n                <div><input type=\"text\"  id=\"wvta\" /></div> \r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Extensie WVTA:</label>\r\n                <div><input type=\"text\"  id=\"extensie\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Tip:</label>\r\n                <div><input type=\"text\"  id=\"tip\" /></div>\r\n            </div><div class=\"w2ui-field\">\r\n                <label >Varianta:</label>\r\n                <div><input type=\"text\"  id=\"varianta\" /></div>\r\n            </div><div class=\"w2ui-field\">\r\n                <label >Versiune:</label>\r\n                <div><input type=\"text\"  id=\"versiune\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >An fabricatie:</label>\r\n                <div><input type=\"text\"  class=\"input-sm\" id=\"an_fabr\" maxlength=\"4\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Masa reala(kg):</label>\r\n                <div><input type=\"text\"  class=\"input-sm\" id=\"masa_reala\" maxlength=\"6\" /></div>   \r\n            </div>\r\n            <div class=\"w2ui-field\" style=\"margin-bottom:5px\">\r\n                <label >Culoare:</label>\r\n                <div><input type=\"text\"  id=\"culoare\" class=\"select-control\" /></div>\r\n            </div>\r\n            <div id=\"engine_container\">\r\n                <div class=\"w2ui-field engine\">\r\n                    <label >Cod motor:</label>\r\n                    <div><input type=\"text\"  id=\"cod_motor\" /></div>\r\n                </div>\r\n                <div class=\"w2ui-field engine\">\r\n                    <label >Putere kW:</label>\r\n                    <div><input type=\"text\" class=\"input-sm\"  id=\"putere_kw\" /></div>\r\n                </div>\r\n                <div class=\"w2ui-field engine\">\r\n                    <label >Cilindree:</label>\r\n                    <div><input type=\"text\" class=\"input-sm\" id=\"cilindree\" /></div>\r\n                </div>\r\n                <div class=\"w2ui-field engine\">\r\n                    <label>Serie motor:</label>\r\n                    <div><input type=\"text\"  id=\"serie_motor\" /></div>  \r\n                </div>\r\n                <div class=\"w2ui-field\">\r\n                    <label>CO2 WLTP Comb.:</label>\r\n                    <div><input type=\"text\" class=\"input-sm\" id=\"co2_wltp\" /></div>  \r\n                </div>\r\n                <div class=\"w2ui-field\">\r\n                    <label>CO2 alt. WLTP Comb.:</label>\r\n                    <div><input type=\"text\" class=\"input-sm\" id=\"co2_wltp_alt\" /></div>  \r\n                </div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label>Observatii:</label>\r\n                <div><textarea id=\"observatii\" style=\"box-sizing: border-box; margin: 0px; width: 400px; height: 70px;\"></textarea></div>  \r\n            </div>\r\n             <div class=\"w2ui-field\">\r\n                <label>Motiv anulare:</label>\r\n                <div><textarea id=\"motiv_respingere\" style=\"box-sizing: border-box; margin: 0px; width: 400px; height: 70px;\"></textarea></div>  \r\n            </div>\r\n            </fieldset>\r\n            <fieldset>\r\n                <legend>Nr. omologare RAR:</legend>\r\n             <div class=\"w2ui-field\">\r\n                <div><input type=\"text\" style=\"font-size: 18px;width:300px;text-transform:uppercase\"  id=\"nr_registru\" /></div>\r\n            </div>\r\n            </fieldset>\r\n        <!--</form>-->\r\n            <fieldset>\r\n            <legend>Mentiuni suplimentare:</legend>\r\n            <button class=\"btn btn-green\" id=\"btnAddMentiune\"><i class=\"w2ui-icon-plus\"></i></button>\r\n            <div class=\"mentiuni w2ui-field\" id=\"mentiuni_container\">\r\n                <!--<input  type=\"text\" id=\"ment1\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment2\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment3\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment4\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment5\" maxlength=\"50\"  />-->\r\n            </div>\r\n            </fieldset>\r\n        </div>\r\n        <div  style=\"height:100%\" id=\"date_tehnice\">\r\n            <div id=\"files_container\">\r\n                <div id=\"files_list_container\">\r\n                </div>\r\n                <br>\r\n                <button class=\"btn btn-green\" id=\"btnAddFile\" >\r\n                    <i class=\"w2ui-icon-plus\"></i>\r\n                </button>\r\n            </div>\r\n             <br style=\"clear:both\">\r\n             <hr>\r\n            <div id=\"date_tehnice_container\">\r\n                <!-- <div class=\"accordion\" id=\"date-accordion\"></div> -->\r\n            </div>\r\n            <br>\r\n            <hr>\r\n            <div id=\"anvelope_container\" style=\"margin-top: 35px\">\r\n                <!-- <div class=\"accordion\" id=\"anvelope-accordion\"></div> -->\r\n            </div>\r\n        </div>\r\n    <!--end vehicule container-->\r\n        <div id=\"buttons_container\">\r\n        <div class=\"col-md-9\" id=\"operation_container\">\r\n            <button title=\"Inchide\" class=\"btn btn-default\" id=\"btnBack\"><i class=\"w2ui-icon-back\"></i> Inchide\r\n            </button>\r\n            <button title=\"Salvare\" class=\"btn btn-green\" id=\"btnSaveVehicul\"><i class=\"w2ui-icon-save\"></i> Salveaza\r\n            </button>\r\n            <button disabled title=\"Copiere\" class=\"btn btn-orange\" id=\"btnCopyVehicul\"><i class=\"w2ui-icon-paste\" ></i> Copiaza\r\n            </button>\r\n            <button disabled title=\"Tipar CIV\" class=\"btn btn-blue\" id=\"btnVehiculComplet\"><i class=\"w2ui-icon-print\"></i> Tipar CIV\r\n            </button>\r\n            <button disabled title=\"Arhivare CIV\" class=\"btn btn-green\" id=\"btnArhivare\"><i class=\"w2ui-icon-columns\"></i> Arhivare CIV\r\n            </button>\r\n            <button  title=\"Anulare\" class=\"btn btn-red\" id=\"btnNewWindow\"><i class=\"w2ui-icon-cross\"></i> Anulare\r\n            </button>\r\n            <button  title=\"Deblocare\" class=\"btn btn-green\" id=\"btnUnlock\"><i class=\"w2ui-icon-check\"></i> Deblocare\r\n            </button>\r\n            <button disabled title=\"Transmite\" class=\"btn btn-orange\" id=\"btnSendVehicul\"><i class=\"w2ui-icon-mail\" ></i> Transmite\r\n            </button>\r\n            </button>\r\n            <button disabled title=\"Raport\" class=\"btn btn-blue\" id=\"btnFisaVehicul\"><i class=\"w2ui-icon-print\" ></i> Raport\r\n            </button>\r\n        </div>\r\n        <div class=\"col-md-3\" id=\"supervize_container\">\r\n            <button id=\"btnFirst\">|<</button>\r\n            <button id=\"btnPrev\"><</button>\r\n            <input type=\"text\" id=\"currentIndex\" style=\"width:50px\" readonly/>\r\n            <button id=\"btnNext\">></button>\r\n            <button id=\"btnLast\">>|</button>\r\n        </div>\r\n        </div>\r\n</div>\r\n";
+  buffer += "<div id=\"vehiculTemplate\" class=\"form-model\" style=\"width:100%;margin:0 auto;height:100%\">\r\n    <input type='hidden' name=\"id\" id=\"id\" data-bind=\"value:id\" />\r\n    <input type=\"hidden\" name=\"id_comanda\" data-bind=\"value:id_comanda\" />\r\n        <div style=\"height:100%;min-width: 500px\" id=\"date_principale\">\r\n        <fieldset>\r\n            <legend>Date vehicul</legend>\r\n            <div class=\"w2ui-field\">\r\n                <label>VIN:</label>\r\n                <div><input type='text'  id=\"vin\" maxlength=\"17\" style=\"text-transform: uppercase\"/></div>\r\n            </div>\r\n            \r\n            <div class=\"w2ui-field\">\r\n                <label >WVTA:</label>\r\n                <div><input type=\"text\"  id=\"wvta\" /></div> \r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Extensie WVTA:</label>\r\n                <div><input type=\"text\"  id=\"extensie\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Tip:</label>\r\n                <div><input type=\"text\"  id=\"tip\" /></div>\r\n            </div><div class=\"w2ui-field\">\r\n                <label >Varianta:</label>\r\n                <div><input type=\"text\"  id=\"varianta\" /></div>\r\n            </div><div class=\"w2ui-field\">\r\n                <label >Versiune:</label>\r\n                <div><input type=\"text\"  id=\"versiune\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >An fabricatie:</label>\r\n                <div><input type=\"text\"  class=\"input-sm\" id=\"an_fabr\" maxlength=\"4\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Masa reala(kg):</label>\r\n                <div><input type=\"text\"  class=\"input-sm\" id=\"masa_reala\" maxlength=\"6\" /></div>   \r\n            </div>\r\n            <div class=\"w2ui-field\" style=\"margin-bottom:5px\">\r\n                <label >Culoare:</label>\r\n                <div><input type=\"text\"  id=\"culoare\" class=\"select-control\" /></div>\r\n            </div>\r\n            <div id=\"engine_container\">\r\n                <div class=\"w2ui-panel-title\">Date Motor</div>\r\n                <div class=\"panel-body\">\r\n                <div class=\"w2ui-field engine\">\r\n                    <label >Cod motor:</label>\r\n                    <div><input type=\"text\"  id=\"cod_motor\" /></div>\r\n                </div>\r\n                <div class=\"w2ui-field engine\">\r\n                    <label >Putere kW:</label>\r\n                    <div><input type=\"text\" class=\"input-sm\"  id=\"putere_kw\" /></div>\r\n                </div>\r\n                <div class=\"w2ui-field engine\">\r\n                    <label >Cilindree:</label>\r\n                    <div><input type=\"text\" class=\"input-sm\" id=\"cilindree\" /></div>\r\n                </div>\r\n                <div class=\"w2ui-field engine\">\r\n                    <label>Serie motor:</label>\r\n                    <div><input type=\"text\"  id=\"serie_motor\" /></div>  \r\n                </div>\r\n                </div>\r\n                \r\n                 <div id=\"supl_container\">\r\n                <div class=\"w2ui-panel-title\">Date Suplimentare</div>\r\n                <div class=\"panel-body\">\r\n                    <div class=\"w2ui-field\">\r\n                        <label>49.4 CO2 WLTP Comb.:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"co2_wltp\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>49.4 CO2 alt. WLTP Comb.:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"co2_wltp_alt\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>47.1.1 Masa incercare (kg):</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"masa_incercare\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>49.1 Factor deviere:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"factor_deviere\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>49.1 Factor Verificare:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"factor_verificare\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>49.3.1 Ecoinovatie:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"ecoinovatie\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>49.3.2.1 Reduceri CO2 NEDC:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"reduceri_co2_nedc\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>49.3.2.2 Reduceri CO2 WLTP:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"reduceri_co2_wltp\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>49.5 Consum energie:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"consum_energie\" /></div>\r\n                    </div>\r\n                     <div class=\"w2ui-field\">\r\n                        <label>49.5 Autonomie electric:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"autonomie_electric\" /></div>\r\n                    </div>\r\n                    <div class=\"w2ui-field\">\r\n                        <label>0.2.3.1 Familia interpolare:</label>\r\n                        <div><input class=\"date-suplim\" type=\"text\" id=\"familia_interpolare\" /></div>\r\n                    </div>\r\n                    <button class=\"btn btn-green\" id=\"btnUpdateDateSupl\"><i class=\"w2ui-icon-check\"></i> Update</button>\r\n                </div>\r\n            </div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label>Observatii:</label>\r\n                <div><textarea id=\"observatii\" style=\"box-sizing: border-box; margin: 0px; width: 400px; height: 70px;\"></textarea></div>  \r\n            </div>\r\n             <div class=\"w2ui-field\">\r\n                <label>Motiv anulare:</label>\r\n                <div><textarea id=\"motiv_respingere\" style=\"box-sizing: border-box; margin: 0px; width: 400px; height: 70px;\"></textarea></div>  \r\n            </div>\r\n            </fieldset>\r\n            <fieldset>\r\n                <legend>Nr. omologare RAR:</legend>\r\n             <div class=\"w2ui-field\">\r\n                <div><input type=\"text\" style=\"font-size: 18px;width:300px;text-transform:uppercase\"  id=\"nr_registru\" /></div>\r\n            </div>\r\n            </fieldset>\r\n        <!--</form>-->\r\n            <fieldset>\r\n            <legend>Mentiuni suplimentare:</legend>\r\n            <button class=\"btn btn-green\" id=\"btnAddMentiune\"><i class=\"w2ui-icon-plus\"></i></button>\r\n            <div class=\"mentiuni w2ui-field\" id=\"mentiuni_container\">\r\n                <!--<input  type=\"text\" id=\"ment1\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment2\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment3\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment4\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment5\" maxlength=\"50\"  />-->\r\n            </div>\r\n            </fieldset>\r\n        </div>\r\n        <div  style=\"height:100%\" id=\"date_tehnice\">\r\n            <div id=\"files_container\">\r\n                <div id=\"files_list_container\">\r\n                </div>\r\n                <br>\r\n                <button class=\"btn btn-green\" id=\"btnAddFile\" >\r\n                    <i class=\"w2ui-icon-plus\"></i>\r\n                </button>\r\n            </div>\r\n             <br style=\"clear:both\">\r\n             <hr>\r\n            <div id=\"date_tehnice_container\">\r\n                \r\n            </div>\r\n            <br>\r\n            <hr>\r\n            <div id=\"anvelope_container\" style=\"margin-top: 35px\">\r\n                \r\n            </div>\r\n        </div>\r\n    <!--end vehicule container-->\r\n        <div id=\"buttons_container\">\r\n        <div class=\"col-md-9\" id=\"operation_container\">\r\n            <button title=\"Inchide\" class=\"btn btn-default\" id=\"btnBack\"><i class=\"w2ui-icon-back\"></i> Inchide\r\n            </button>\r\n            <button title=\"Salvare\" class=\"btn btn-green\" id=\"btnSaveVehicul\"><i class=\"w2ui-icon-save\"></i> Salveaza\r\n            </button>\r\n            <button disabled title=\"Copiere\" class=\"btn btn-orange\" id=\"btnCopyVehicul\"><i class=\"w2ui-icon-paste\" ></i> Copiaza\r\n            </button>\r\n            <button disabled title=\"Tipar CIV\" class=\"btn btn-blue\" id=\"btnVehiculComplet\"><i class=\"w2ui-icon-print\"></i> Tipar CIV\r\n            </button>\r\n            <button disabled title=\"Arhivare CIV\" class=\"btn btn-green\" id=\"btnArhivare\"><i class=\"w2ui-icon-columns\"></i> Arhivare CIV\r\n            </button>\r\n            <button  title=\"Anulare\" class=\"btn btn-red\" id=\"btnNewWindow\"><i class=\"w2ui-icon-cross\"></i> Anulare\r\n            </button>\r\n            <button  title=\"Deblocare\" class=\"btn btn-green\" id=\"btnUnlock\"><i class=\"w2ui-icon-check\"></i> Deblocare\r\n            </button>\r\n            <button disabled title=\"Transmite\" class=\"btn btn-orange\" id=\"btnSendVehicul\"><i class=\"w2ui-icon-mail\" ></i> Transmite\r\n            </button>\r\n            </button>\r\n            <button disabled title=\"Raport\" class=\"btn btn-blue\" id=\"btnFisaVehicul\"><i class=\"w2ui-icon-print\" ></i> Raport\r\n            </button>\r\n        </div>\r\n        <div class=\"col-md-3\" id=\"supervize_container\">\r\n            <button id=\"btnFirst\">|<</button>\r\n            <button id=\"btnPrev\"><</button>\r\n            <input type=\"text\" id=\"currentIndex\" style=\"width:50px\" readonly/>\r\n            <button id=\"btnNext\">></button>\r\n            <button id=\"btnLast\">>|</button>\r\n        </div>\r\n        </div>\r\n</div>\r\n";
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],56:[function(require,module,exports){
+},{"hbsfy/runtime":168}],56:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4447,7 +4655,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div></div>";
   });
 
-},{"hbsfy/runtime":153}],57:[function(require,module,exports){
+},{"hbsfy/runtime":168}],57:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4459,7 +4667,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div class=\"w2ui-page page-0  modalContent\">\r\n    <div class=\"w2ui-field\" >\r\n        <label>Axa:</label>\r\n        <div><input type=\"text\" id=\"axa\"></div>\r\n    </div>\r\n    <div class=\"w2ui-field\" >\r\n        <label>Anvelopa:</label>\r\n        <div><input type=\"text\"   id=\"id_roata\"></div>\r\n    </div>\r\n</div>\r\n <hr>\r\n    <div class=\"w2ui-buttons\">\r\n        <button class=\"btn btn-blue save-anvelopa\"><i class=\"fa fa-save\"></i> Salveaza</button>\r\n        <button class=\"btn btn-red cancel-anvelopa\"><i class=\"fa fa-times\"></i> Renunta</button>\r\n    </div>";
   });
 
-},{"hbsfy/runtime":153}],58:[function(require,module,exports){
+},{"hbsfy/runtime":168}],58:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4471,7 +4679,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div class=\"w2ui-page page-0  modalContent\">\r\n    <div class=\"w2ui-field\" >\r\n        <label>Axa fata:</label>\r\n        <div><input type=\"text\" id=\"id_roataf\"></div>\r\n    </div>\r\n    <div class=\"w2ui-field\" >\r\n         <label>Idem spate:</label>\r\n        <div><input type=\"checkbox\"   id=\"idemspate\"></div>\r\n    </div>\r\n\r\n    <div class=\"w2ui-field\" >\r\n        <label>Axa spate:</label>\r\n        <div><input type=\"text\" id=\"id_roatas\"></div>\r\n    </div>\r\n</div>\r\n <hr>\r\n    <div class=\"w2ui-buttons\">\r\n        <button class=\"btn btn-blue save-anvelopa\"><i class=\"fa fa-save\"></i> Salveaza</button>\r\n        <button class=\"btn btn-red cancel-anvelopa\"><i class=\"fa fa-times\"></i> Renunta</button>\r\n    </div>";
   });
 
-},{"hbsfy/runtime":153}],59:[function(require,module,exports){
+},{"hbsfy/runtime":168}],59:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4483,7 +4691,71 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"gridAnvelope\" style=\"min-height: 350px\"></div>\r\n<!-- <div id=\"gridSursaAnvelope\" style=\"height: 350px\"></div> -->";
   });
 
-},{"hbsfy/runtime":153}],60:[function(require,module,exports){
+},{"hbsfy/runtime":168}],60:[function(require,module,exports){
+// hbsfy compiled Handlebars template
+var HandlebarsCompiler = require('hbsfy/runtime');
+module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
+
+
+  buffer += "<label name=\"label\"></label>\r\n<div><input type=\"text\" id=\"Atribute_";
+  if (helper = helpers.index) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.index); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  buffer += escapeExpression(stack1)
+    + "__val\"  name=\"val\"  /></div>\r\n";
+  return buffer;
+  });
+
+},{"hbsfy/runtime":168}],61:[function(require,module,exports){
+// hbsfy compiled Handlebars template
+var HandlebarsCompiler = require('hbsfy/runtime');
+module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
+
+
+  buffer += "<label name=\"label\"></label>\r\n<div>\r\n	<input type=\"text\" name=\"val\" class=\"input-sm\"  id=\"Atribute_";
+  if (helper = helpers.index) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.index); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  buffer += escapeExpression(stack1)
+    + "__val\" />\r\n</div>";
+  return buffer;
+  });
+
+},{"hbsfy/runtime":168}],62:[function(require,module,exports){
+// hbsfy compiled Handlebars template
+var HandlebarsCompiler = require('hbsfy/runtime');
+module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
+
+
+  buffer += "<label  name=\"label\"></label>\r\n<div><input type=\"number\" name=\"val\" class=\"input-sm\"  id=\"Atribute_";
+  if (helper = helpers.index) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.index); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  buffer += escapeExpression(stack1)
+    + "__val\" />\r\n\r\n\r\n<label class=\"lbl-desc-start\" name=\"min\"></label><label class=\"lbl-desc-end\" name=\"max\"></label>\r\n\r\n</div>";
+  return buffer;
+  });
+
+},{"hbsfy/runtime":168}],63:[function(require,module,exports){
+// hbsfy compiled Handlebars template
+var HandlebarsCompiler = require('hbsfy/runtime');
+module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  var buffer = "";
+
+
+  buffer += "<div id=\"vehiculTemplate\" class=\"form-model\" style=\"width:100%;margin:0 auto;height:100%\">\r\n    <input type='hidden' name=\"id\" id=\"id\" data-bind=\"value:id\" />\r\n    <input type=\"hidden\" name=\"id_comanda\" data-bind=\"value:id_comanda\" />\r\n        <div style=\"height:100%;min-width: 500px\" id=\"date_principale\">\r\n        <fieldset>\r\n            <legend>Date vehicul</legend>\r\n            \r\n            <div class=\"w2ui-field\">\r\n                <label>Nr. omologare RAR:</label>\r\n                <div><input type=\"text\"  id=\"nr_registru\" disabled/></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >WVTA:</label>\r\n                <div><input type=\"text\"  id=\"wvta\" /></div> \r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Extensie WVTA:</label>\r\n                <div><input type=\"text\"  id=\"extensie\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Tip:</label>\r\n                <div><input type=\"text\"  id=\"tip\" /></div>\r\n            </div><div class=\"w2ui-field\">\r\n                <label >Varianta:</label>\r\n                <div><input type=\"text\"  id=\"varianta\" /></div>\r\n            </div><div class=\"w2ui-field\">\r\n                <label >Versiune:</label>\r\n                <div><input type=\"text\"  id=\"versiune\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Categorie UE:</label>\r\n                <div><input type=\"text\"  id=\"categorie\" /></div>\r\n            </div>\r\n            \r\n            \r\n            \r\n            <div id=\"engine_container\">\r\n                <div class=\"w2ui-panel-title\">Date Motor</div>\r\n                <div class=\"panel-body\">\r\n                <div class=\"w2ui-field engine\">\r\n                    <label >Cod motor:</label>\r\n                    <div><input type=\"text\"  id=\"cod_motor\" /></div>\r\n                </div>\r\n                \r\n                </div>\r\n                \r\n                 \r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label>Observatii:</label>\r\n                <div><textarea id=\"observatii\" style=\"box-sizing: border-box; margin: 0px; width: 400px; height: 70px;\"></textarea></div>  \r\n            </div>\r\n             \r\n            </fieldset>\r\n            <fieldset>\r\n                <legend>Nr. omologare RAR:</legend>\r\n             <div class=\"w2ui-field\">\r\n                <div><input type=\"text\" style=\"font-size: 18px;width:300px;text-transform:uppercase\"  id=\"nr_registru\" /></div>\r\n            </div>\r\n            </fieldset>\r\n        <!--</form>-->\r\n            <fieldset>\r\n            <legend>Mentiuni suplimentare:</legend>\r\n            <button class=\"btn btn-green\" id=\"btnAddMentiune\"><i class=\"w2ui-icon-plus\"></i></button>\r\n            <div class=\"mentiuni w2ui-field\" id=\"mentiuni_container\">\r\n                <!--<input  type=\"text\" id=\"ment1\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment2\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment3\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment4\" maxlength=\"50\"  />\r\n                <input type=\"text\"  id=\"ment5\" maxlength=\"50\"  />-->\r\n            </div>\r\n            </fieldset>\r\n        </div>\r\n        <div  style=\"height:100%\" id=\"date_tehnice\">\r\n            \r\n            <div id=\"date_tehnice_container\">\r\n                \r\n            </div>\r\n            <br>\r\n            <hr>\r\n            <div id=\"anvelope_container\" style=\"margin-top: 35px\">\r\n                \r\n            </div>\r\n        </div>\r\n    <!--end vehicule container-->\r\n        <div id=\"buttons_container\">\r\n        <div class=\"col-md-9\" id=\"operation_container\">\r\n            <button title=\"Inchide\" class=\"btn btn-default\" id=\"btnBack\"><i class=\"w2ui-icon-back\"></i> Inchide\r\n            </button>\r\n            <button title=\"Salvare\" class=\"btn btn-green\" id=\"btnSaveVehicul\"><i class=\"w2ui-icon-save\"></i> Salveaza\r\n            </button>\r\n            \r\n        </div>\r\n        \r\n        </div>\r\n</div>\r\n";
+  return buffer;
+  });
+
+},{"hbsfy/runtime":168}],64:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4495,7 +4767,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"cereriNrOmGrid\" class=\"page\">Cereri page</div>";
   });
 
-},{"hbsfy/runtime":153}],61:[function(require,module,exports){
+},{"hbsfy/runtime":168}],65:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4507,7 +4779,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "\r\n<table class=\"tbl-detmotor\">\r\n	<tr>\r\n		<th>Info</th>\r\n		<th>Caracteristici</th>\r\n		<th>Cilindrii</th>\r\n		<th>Echipare</th>\r\n		<th>Poluare</th>\r\n	</tr>\r\n	<tr>\r\n		<td>\r\n			<p><div class=\"lbl-detmotor\">Tip: </div><span style=\"font-weight:bold\"><label id=\"tip\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Cod: </div><span style=\"font-weight:bold\"><label id=\"cod\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Combustibil: </div><span style=\"font-weight:bold\"><label id=\"combustib\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Tip Motor: </div><span style=\"font-weight:bold\"><label id=\"tip_mot\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Alimentare: </div><span style=\"font-weight:bold\"><label id=\"tip_alim\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Timpi: </div><span style=\"font-weight:bold\"><label id=\"timpi\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Racire: </div><span style=\"font-weight:bold\"><label id=\"tip_racire\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Depoluare: </div><span style=\"font-weight:bold\"><label id=\"tip_depol\"></label></span></p>\r\n		</td>\r\n		<td>\r\n			<p><div class=\"lbl-detmotor\">Putere(kW): </div><span style=\"font-weight:bold\"><label id=\"p_max_kw\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">P. net(kW): </div><span style=\"font-weight:bold\"><label id=\"kw_max_net\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">P orar(kW): </div><span style=\"font-weight:bold\"><label id=\"kw_max_h\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">P. 30m(kW): </div><span style=\"font-weight:bold\"><label id=\"kw_max_30\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Putere(CP): </div><span style=\"font-weight:bold\"><label id=\"p_max_cp\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Turatie Pmax: </div><span style=\"font-weight:bold\"><label id=\"rot_p_max\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Cuplu: </div><span style=\"font-weight:bold\"><label id=\"cuplu_max\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Turatie cuplu: </div><span style=\"font-weight:bold\"><label id=\"rot_c_max\"></label></span></p>\r\n		</td>\r\n		<td>\r\n			<p><div class=\"lbl-detmotor\">Cilindree: </div><span style=\"font-weight:bold\"><label id=\"cilindree\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Nr. cilindrii: </div><span style=\"font-weight:bold\"><label id=\"nr_cilindr\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Configuratie: </div><span style=\"font-weight:bold\"><label id=\"config\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Alezaj: </div><span style=\"font-weight:bold\"><label id=\"alezaj\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Cursa: </div><span style=\"font-weight:bold\"><label id=\"cursa\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Compresie: </div><span style=\"font-weight:bold\"><label id=\"compresie\"></label></span></p>\r\n		</td>\r\n		<td>\r\n			<p><div class=\"lbl-detmotor\">Echipare: </div><span style=\"font-weight:bold\"><label id=\"echipare\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Echipare1: </div><span style=\"font-weight:bold\"><label id=\"echipare1\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Echipare2: </div><span style=\"font-weight:bold\"><label id=\"echipare2\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Echipare3: </div><span style=\"font-weight:bold\"><label id=\"echipare3\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Echipare4: </div><span style=\"font-weight:bold\"><label id=\"echipare4\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Partic1: </div><span style=\"font-weight:bold\"><label id=\"partic1\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Partic2: </div><span style=\"font-weight:bold\"><label id=\"partic2\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Partic3: </div><span style=\"font-weight:bold\"><label id=\"partic3\"></label></span></p>\r\n		</td>\r\n		<td>\r\n			<p><div class=\"lbl-detmotor\">CO: </div><span style=\"font-weight:bold\"><label id=\"co\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">HC: </div><span style=\"font-weight:bold\"><label id=\"hc\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">NOX: </div><span style=\"font-weight:bold\"><label id=\"nox\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Particule: </div><span style=\"font-weight:bold\"><label id=\"particule\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Opacitate: </div><span style=\"font-weight:bold\"><label id=\"opacitate\"></label></span></p>\r\n			<p><div class=\"lbl-detmotor\">Doc Omol: </div><span style=\"font-weight:bold\"><label id=\"doc_omolog\"></label></span></p>\r\n		</td>\r\n	</tr>\r\n	<tr>\r\n		<td>Observatii:</td>\r\n		<td colspan=\"4\" id=\"observatii\"></td>\r\n	</tr>\r\n\r\n</table>";
   });
 
-},{"hbsfy/runtime":153}],62:[function(require,module,exports){
+},{"hbsfy/runtime":168}],66:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4516,11 +4788,11 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   var buffer = "";
 
 
-  buffer += "<form role=\"form\" class=\"form-inline mid-form\" >\r\n	<fieldset style=\"padding: 10px\">\r\n		<legend>NR. REGISTRU: <label id=\"nr_registru\" style=\"color:blue;font-weight: bold\"></label></legend>\r\n		<div style=\"width:400px;float:left\">\r\n		<!-- <div> -->\r\n		<div class=\"w2ui-field\">\r\n			<label>Mod omologare:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"cod_tip_omologare\" >\r\n			</div>\r\n		</div>\r\n		<!-- <div class=\"w2ui-field\" style=\"display:none\">\r\n			<label>Tip omologare:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"cod_tip_omologare\"></label>\r\n			</div>\r\n		</div>\r\n\r\n		</div>-->\r\n		<div class=\"w2ui-field\">\r\n			<label>WVTA:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"wvta\" disabled=\"true\">\r\n				\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Categorie CE:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"categorie\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Categorie folosinta:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"cod_categorie\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field clasa\">\r\n			<label>Clasa:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"id_clasa\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Caroserie:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"cod_caroserie\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Marca:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"marca\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Tip:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"tip\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Varianta:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"varianta\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Versiune:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"versiune\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Denumire:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"denumire_comerciala\">\r\n			</div>\r\n		</div>\r\n		</div>\r\n\r\n		<div style=\"width:400px;float:left\">\r\n		<div class=\"w2ui-field\">\r\n			<label>Producator:</label>\r\n			<div>\r\n				<textarea id=\"producator\"></textarea>\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Numar axe:</label>\r\n			<div>\r\n				<input type=\"number\" id=\"nr_axe\">\r\n			</div>\r\n		</div>\r\n		<!--<div class=\"w2ui-field\">\r\n			<label>Antipoluare:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"antipoluare\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>ABS:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"abs\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>OBD:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"obd\">\r\n			</div>\r\n		</div>-->\r\n		<div class=\"w2ui-field\">\r\n			<label>Observatii:</label>\r\n			<div>\r\n				<textarea id=\"observatii\"></textarea>\r\n			</div>\r\n		</div>\r\n		</div>\r\n	</fieldset>\r\n</form>\r\n";
+  buffer += "<form role=\"form\" class=\"form-inline mid-form\" >\r\n	<fieldset style=\"padding: 10px\">\r\n		<legend>NR. REGISTRU: <label id=\"nr_registru\" style=\"color:blue;font-weight: bold\"></label></legend>\r\n		<div style=\"width:400px;float:left\">\r\n		<!-- <div> -->\r\n		<div class=\"w2ui-field\">\r\n			<label>Mod omologare:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"cod_tip_omologare\" >\r\n			</div>\r\n		</div>\r\n		<!-- <div class=\"w2ui-field\" style=\"display:none\">\r\n			<label>Tip omologare:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"cod_tip_omologare\"></label>\r\n			</div>\r\n		</div>\r\n\r\n		</div>-->\r\n		<div class=\"w2ui-field\">\r\n			<label>WVTA:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"wvta\">\r\n				\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Extensie WVTA:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"extensie\">\r\n				\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Categorie CE:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"categorie\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Categorie folosinta:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"cod_categorie\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field clasa\">\r\n			<label>Clasa:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"id_clasa\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Caroserie:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"cod_caroserie\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Marca:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"marca\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Tip:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"tip\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Varianta:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"varianta\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Versiune:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"versiune\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Denumire:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"denumire_comerciala\">\r\n			</div>\r\n		</div>\r\n		</div>\r\n\r\n		<div style=\"width:400px;float:left\">\r\n		<div class=\"w2ui-field\">\r\n			<label>Producator:</label>\r\n			<div>\r\n				<textarea id=\"producator\"></textarea>\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>Numar axe:</label>\r\n			<div>\r\n				<input type=\"number\" id=\"nr_axe\">\r\n			</div>\r\n		</div>\r\n		<!--<div class=\"w2ui-field\">\r\n			<label>Antipoluare:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"antipoluare\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>ABS:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"abs\">\r\n			</div>\r\n		</div>\r\n		<div class=\"w2ui-field\">\r\n			<label>OBD:</label>\r\n			<div>\r\n				<input type=\"text\" id=\"obd\">\r\n			</div>\r\n		</div>-->\r\n		<div class=\"w2ui-field\">\r\n			<label>Observatii:</label>\r\n			<div>\r\n				<textarea id=\"observatii\"></textarea>\r\n			</div>\r\n		</div>\r\n		</div>\r\n	</fieldset>\r\n</form>\r\n";
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],63:[function(require,module,exports){
+},{"hbsfy/runtime":168}],67:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4532,7 +4804,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],64:[function(require,module,exports){
+},{"hbsfy/runtime":168}],68:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4565,7 +4837,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],65:[function(require,module,exports){
+},{"hbsfy/runtime":168}],69:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4639,7 +4911,7 @@ function program6(depth0,data) {
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],66:[function(require,module,exports){
+},{"hbsfy/runtime":168}],70:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4709,7 +4981,7 @@ function program6(depth0,data) {
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],67:[function(require,module,exports){
+},{"hbsfy/runtime":168}],71:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4730,7 +5002,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],68:[function(require,module,exports){
+},{"hbsfy/runtime":168}],72:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4747,7 +5019,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],69:[function(require,module,exports){
+},{"hbsfy/runtime":168}],73:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4764,7 +5036,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],70:[function(require,module,exports){
+},{"hbsfy/runtime":168}],74:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4776,7 +5048,55 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"gridMotoare\" style=\"height:250px\"></div>\r\n<div id=\"gridSursa\" style=\"height:350px\"></div>";
   });
 
-},{"hbsfy/runtime":153}],71:[function(require,module,exports){
+},{"hbsfy/runtime":168}],75:[function(require,module,exports){
+// hbsfy compiled Handlebars template
+var HandlebarsCompiler = require('hbsfy/runtime');
+module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  
+
+
+  return "<div style=\"height:calc(100% - 37px)\">\r\n  <button class=\"btn btn-blue\" id=\"addfield\"><i class=\"w2ui-add\"></i>Adauga criterii cautare</button>\r\n  <div style=\"display: flex; height:100%\">\r\n    <div id=\"searchFields\" style=\"height: 100%;overflow:auto;margin:5px;width:630px;min-width: 630px;border:thin solid #333;\"></div>\r\n    <div style=\"border: thin solid #333;margin: 5px;height: 100%;width: 100%;position: relative;min-width: 450px;\">\r\n      <div style=\"position: absolute; left:17px; bottom:48px;\"><span>Afisare </span><span id=\"crtPage\">0</span><span> din </span><span id=\"totalRecords\">0</span><span> rezultate</span></div>\r\n      <button class=\"btn btn-red\" style=\"position: absolute;bottom:10px;right:10px;\" id=\"closeBtn\"><i class=\"w2ui-icon-cross\"></i>Inchide</button>\r\n      <button class=\"btn btn-green\" style=\"position: absolute;bottom:10px;right:100px;\" id=\"searchBtn\"><i class=\"w2ui-icon-search\"></i>Cauta</button> \r\n      <button class=\"btn btn-orange\" style=\"position: absolute;bottom:10px;right:220px;\" id=\"copyBtn\"><i class=\"w2ui-icon-copy\"></i>Copiaza date</button> \r\n      <button class=\"btn btn-default\" style=\"position: absolute;bottom:10px;left:90px;\" id=\"nextBtn\">Urmator</button> \r\n      <button class=\"btn btn-default\" style=\"position: absolute;bottom:10px;left:10px;\" id=\"prevBtn\">Anterior</button> \r\n    </div>\r\n  </div>\r\n</div>";
+  });
+
+},{"hbsfy/runtime":168}],76:[function(require,module,exports){
+// hbsfy compiled Handlebars template
+var HandlebarsCompiler = require('hbsfy/runtime');
+module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  
+
+
+  return "<div id=\"searchResultForm\">\r\n  <div id=\"searchResultData\">\r\n    <div class=\"w2ui-page page-0 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabTVV\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-1 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabDimensiuni\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-2 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabMase\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-3 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabMotor\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-4 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabPoluare\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-5 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabTransmisie\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-6 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabAxe\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-7 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabAnvelope\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-8 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabAltele\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-9 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabSisteme\"></div>\r\n    </div>\r\n    <div class=\"w2ui-page page-10 \" style=\"width:100%\">\r\n      <div class=\"\" id=\"search_tabMentiuni\"></div>\r\n    </div>\r\n  </div>";
+  });
+
+},{"hbsfy/runtime":168}],77:[function(require,module,exports){
+// hbsfy compiled Handlebars template
+var HandlebarsCompiler = require('hbsfy/runtime');
+module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  
+
+
+  return "<div></div>>";
+  });
+
+},{"hbsfy/runtime":168}],78:[function(require,module,exports){
+// hbsfy compiled Handlebars template
+var HandlebarsCompiler = require('hbsfy/runtime');
+module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  
+
+
+  return "<div id=\"selectForm\">\r\n  <div class=\"w2ui-field\">\r\n    <label>Tip Cerere:</label>\r\n    <div><input type=\"text\" id=\"tip_cerere\" /></div>\r\n  </div>\r\n</div>";
+  });
+
+},{"hbsfy/runtime":168}],79:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4788,7 +5108,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"gridSisteme\" style=\"height:350px\"></div>\r\n<div id=\"gridSursaSist\" style=\"height:350px\"></div>";
   });
 
-},{"hbsfy/runtime":153}],72:[function(require,module,exports){
+},{"hbsfy/runtime":168}],80:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4809,7 +5129,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],73:[function(require,module,exports){
+},{"hbsfy/runtime":168}],81:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4818,10 +5138,10 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   
 
 
-  return "<div id=\"tvvForm\">\r\n<div class=\"w2ui-page page-0 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabTVV\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-1 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabDimensiuni\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-2 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabMase\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-3 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabMotor\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-4 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabPoluare\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-5 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabTransmisie\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-6 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabAxe\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-7 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabAnvelope\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-8 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabAltele\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-9 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabSisteme\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-10 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabMentiuni\"></div>\r\n</div>\r\n<div class=\"w2ui-buttons\">\r\n    <div id=\"formButtons\" style=\"display:none; text-align:center\">\r\n        <span id=\"editButtons\">\r\n        <button class=\"btn btn-blue\" id=\"btnSave\"><i class=\"w2ui-icon-save\"></i> Salveaza</button>\r\n        <button class=\"btn btn-orange\" id=\"btnImportDate\"><i class=\"w2ui-icon-upload\"></i> Importa datele de la extensia anterioara</button>\r\n        <button class=\"btn btn-green\" id=\"btnValideaza\"><i class=\"w2ui-icon-check\"></i> Valideaza datele!</button>\r\n        </span>\r\n        \r\n        <button class=\"btn btn-green\" id=\"btnPrintFisa\"><i class=\"w2ui-icon-print\"></i> Fisa</button>\r\n\r\n        <button class=\"btn btn-orange\" id=\"copyButton\" style=\"display:none\"><i class=\"w2ui-icon-copy\"></i> Copy</button>\r\n        <button class=\"btn btn-orange\" id=\"pasteButton\" style=\"display:none\"><i class=\"w2ui-icon-copy\"></i> Paste</button>\r\n        </div>\r\n</div>\r\n</div>";
+  return "<div id=\"tvvForm\" style=\"height: 100%\">\r\n<div class=\"w2ui-page page-0 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabTVV\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-1 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabDimensiuni\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-2 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabMase\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-3 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabMotor\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-4 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabPoluare\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-5 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabTransmisie\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-6 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabAxe\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-7 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabAnvelope\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-8 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabAltele\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-9 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabSisteme\"></div>\r\n</div>\r\n<div class=\"w2ui-page page-10 \" style=\"width:100%\">\r\n<div class=\"\" id=\"tabMentiuni\"></div>\r\n</div>\r\n<div class=\"w2ui-buttons\">\r\n    <div id=\"formButtons\" style=\"display:none; text-align:center\">\r\n        <span id=\"editButtons\">\r\n        <button class=\"btn btn-blue\" id=\"btnSave\"><i class=\"w2ui-icon-save\"></i> Salveaza</button>\r\n        <button class=\"btn btn-orange\" id=\"btnImportDate\"><i class=\"w2ui-icon-upload\"></i> Importa datele de la extensia anterioara</button>\r\n        <button class=\"btn btn-green\" id=\"btnValideaza\"><i class=\"w2ui-icon-check\"></i> Valideaza datele!</button>\r\n        </span>\r\n        \r\n        <button class=\"btn btn-green\" id=\"btnPrintFisa\"><i class=\"w2ui-icon-print\"></i> Fisa</button>\r\n\r\n        <button class=\"btn btn-orange\" id=\"copyButton\" style=\"display:none\"><i class=\"w2ui-icon-copy\"></i> Copy</button>\r\n        <button class=\"btn btn-orange\" id=\"pasteButton\" style=\"display:none\"><i class=\"w2ui-icon-copy\"></i> Paste</button>\r\n        </div>\r\n</div>\r\n</div>";
   });
 
-},{"hbsfy/runtime":153}],74:[function(require,module,exports){
+},{"hbsfy/runtime":168}],82:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4833,7 +5153,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<section>\r\n<br>\r\n<hr>\r\n<div class=\"w2ui-field\">\r\n    <label>Alege fisiere:</label>\r\n    <div>\r\n        <input id=\"fileupload\" name=\"files[]\" type=\"file\" multiple=true class=\"file-loading\" >\r\n    </div>\r\n</div>\r\n</section>";
   });
 
-},{"hbsfy/runtime":153}],75:[function(require,module,exports){
+},{"hbsfy/runtime":168}],83:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4862,60 +5182,15 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],76:[function(require,module,exports){
-// hbsfy compiled Handlebars template
-var HandlebarsCompiler = require('hbsfy/runtime');
-module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
-  this.compilerInfo = [4,'>= 1.0.0'];
-helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
-
-
-  buffer += "<label name=\"label\"></label>\r\n<div><input type=\"text\" id=\"Atribute_";
-  if (helper = helpers.index) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-  else { helper = (depth0 && depth0.index); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-  buffer += escapeExpression(stack1)
-    + "__val\"  name=\"val\"  /></div>\r\n";
-  return buffer;
-  });
-
-},{"hbsfy/runtime":153}],77:[function(require,module,exports){
-// hbsfy compiled Handlebars template
-var HandlebarsCompiler = require('hbsfy/runtime');
-module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
-  this.compilerInfo = [4,'>= 1.0.0'];
-helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
-
-
-  buffer += "<label name=\"label\"></label>\r\n<div>\r\n	<input type=\"text\" name=\"val\" class=\"input-sm\"  id=\"Atribute_";
-  if (helper = helpers.index) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-  else { helper = (depth0 && depth0.index); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-  buffer += escapeExpression(stack1)
-    + "__val\" />\r\n</div>";
-  return buffer;
-  });
-
-},{"hbsfy/runtime":153}],78:[function(require,module,exports){
-// hbsfy compiled Handlebars template
-var HandlebarsCompiler = require('hbsfy/runtime');
-module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
-  this.compilerInfo = [4,'>= 1.0.0'];
-helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
-
-
-  buffer += "<label  name=\"label\"></label>\r\n<div><input type=\"number\" name=\"val\" class=\"input-sm\"  id=\"Atribute_";
-  if (helper = helpers.index) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-  else { helper = (depth0 && depth0.index); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-  buffer += escapeExpression(stack1)
-    + "__val\" />\r\n\r\n\r\n<label class=\"lbl-desc-start\" name=\"min\"></label><label class=\"lbl-desc-end\" name=\"max\"></label>\r\n\r\n</div>";
-  return buffer;
-  });
-
-},{"hbsfy/runtime":153}],79:[function(require,module,exports){
+},{"hbsfy/runtime":168}],84:[function(require,module,exports){
+arguments[4][60][0].apply(exports,arguments)
+},{"dup":60,"hbsfy/runtime":168}],85:[function(require,module,exports){
+arguments[4][61][0].apply(exports,arguments)
+},{"dup":61,"hbsfy/runtime":168}],86:[function(require,module,exports){
+arguments[4][62][0].apply(exports,arguments)
+},{"dup":62,"hbsfy/runtime":168}],87:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56,"hbsfy/runtime":153}],80:[function(require,module,exports){
+},{"dup":56,"hbsfy/runtime":168}],88:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4927,7 +5202,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<!-- <div style=\"overflow:auto;width:100%;height:100%;padding: 20px\">\r\n<p>\r\n	<div style=\"display:inline-block\"><label >WVTA:</label><div><input type=\"text\" id=\"wvta\" /></div></div>\r\n	<div style=\"display:inline-block\"><label >Extensie:</label><div><input type=\"text\" id=\"extensie\" /></div></div>\r\n	<div style=\"display:inline-block\"><label >Tip:</label><div><input type=\"text\" id=\"tip\" /></div></div>\r\n	<div style=\"display:inline-block\"><label >Varianta:</label><div><input type=\"text\" id=\"varianta\" /></div></div>\r\n	<div style=\"display:inline-block\"><label >Versiune:</label><div><input type=\"text\" id=\"versiune\" /></div></div>\r\n</p>\r\n\r\n<p>\r\n	<button name=\"back\" id=\"back\" class=\"btn\">Inapoi la lista</button>\r\n	<button name=\"load\" id=\"load\" class=\"btn btn-blue\">Incarca</button>\r\n	<button name=\"copy\" id=\"copy\" class=\"btn btn-orange\">Multiplica randuri</button>\r\n	<button name=\"save\" id=\"save\" class=\"btn btn-green\">Salveaza</button>\r\n</p>\r\n<p>Cauta: <input id=\"search_field\" type=\"text\"></input><p>\r\n<div id=\"vehicles\"></div>\r\n<div id=\"validationSummary\" style=\"color:red\"></div>\r\n</div> -->\r\n\r\n<div style=\"overflow:auto;width:100%;height:100%;padding: 20px\">\r\n	<p>Atentie! Anvelopele optionale se vor prelua la CIV in ordinea introducerii acestora si in limita numarului de mentiuni posibil.<br>\r\n		In cazul in care doriti sa configurati manual anvelopele optionale, apasati butonul \"Anvelope Optionale\".\r\n	</p>\r\n<p>\r\n	<div style=\"display:inline-block\"><label >WVTA:</label><div><input type=\"text\" id=\"wvta\" /></div></div>\r\n	<div style=\"display:inline-block\"><label >Extensie:</label><div><input type=\"text\" id=\"extensie\" /></div></div>\r\n	<div style=\"display:inline-block\"><label >Tip:</label><div><input type=\"text\" id=\"tip\" /></div></div>\r\n	<div style=\"display:inline-block\"><label >Varianta:</label><div><input type=\"text\" id=\"varianta\" /></div></div>\r\n	<div style=\"display:inline-block\"><label >Versiune:</label><div><input type=\"text\" id=\"versiune\" /></div></div>\r\n</p>\r\n\r\n<div id=\"vehicles\" style=\"height:500px\"></div>\r\n<div id=\"validationSummary\" style=\"color:red\"></div>\r\n<p>\r\n	<button name=\"back\" id=\"back\" class=\"w2ui-btn\"><i class=\"w2ui-icon-signout\"></i> Inapoi la lista</button>\r\n</p>\r\n</div>\r\n";
   });
 
-},{"hbsfy/runtime":153}],81:[function(require,module,exports){
+},{"hbsfy/runtime":168}],89:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4944,7 +5219,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],82:[function(require,module,exports){
+},{"hbsfy/runtime":168}],90:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4956,7 +5231,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"vehiculTemplate\" class=\"form-model\" style=\"width:100%;margin:0 auto;height:100%\">\r\n    <input type='hidden' name=\"id\" id=\"id\" data-bind=\"value:id\" />\r\n    <input type=\"hidden\" name=\"id_comanda\" data-bind=\"value:id_comanda\" />\r\n        <div style=\"height:100%;min-width: 500px\" id=\"date_principale\">\r\n            <div class=\"w2ui-field\">\r\n                <label>VIN:</label>\r\n                <div><input type='text'  id=\"vin\" maxlength=\"17\" style=\"text-transform: uppercase\"/></div>\r\n            </div>\r\n           <!--  <div class=\"w2ui-field\">\r\n                <label >Nr. registru:</label>\r\n                <div><input type=\"text\" id=\"cnot\" /></div>\r\n            </div> -->\r\n            <div class=\"w2ui-field\">\r\n                <label>Nr. omologare RAR:</label>\r\n                <div><input type=\"text\"  id=\"nr_registru\" disabled/></div>\r\n            </div>\r\n\r\n            <div class=\"w2ui-field\">\r\n                <label >WVTA:</label>\r\n                <div><input type=\"text\"  id=\"wvta\" /></div>\r\n                \r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Extensie WVTA:</label>\r\n                <div><input type=\"text\"  id=\"id_extensie\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >Tip:</label>\r\n                <div><input type=\"text\"  id=\"tip\" /></div>\r\n            </div><div class=\"w2ui-field\">\r\n                <label >Varianta:</label>\r\n                <div><input type=\"text\"  id=\"varianta\" /></div>\r\n            </div><div class=\"w2ui-field\">\r\n                <label >Versiune:</label>\r\n                <div><input type=\"text\"  id=\"versiune\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\" id=\"categorie\">\r\n                <label >Categorie:</label>\r\n                <div><input type=\"text\"  id=\"categ_euro\" /></div>\r\n            </div>\r\n            <div class=\"w2ui-field\">\r\n                <label >An fabricatie:</label>\r\n                <div><input type=\"text\"  class=\"input-sm\" id=\"an_fabr\" maxlength=\"4\" /></div>\r\n                \r\n            </div>\r\n            <div class=\"w2ui-field\" style=\"margin-bottom:5px\">\r\n                <label >Culoare:</label>\r\n                <div><input type=\"text\"  id=\"culoare\" class=\"select-control\" /></div>\r\n            </div>\r\n            <div id=\"engine_container\">\r\n                <div class=\"w2ui-field engine\">\r\n                    <label >Cod motor / P(kW):</label>\r\n                    <div><input type=\"text\"  id=\"motor\" /></div>\r\n                    \r\n                </div>\r\n                <div class=\"w2ui-field engine\">\r\n                    <label>Serie motor:</label>\r\n                    <div><input type=\"text\"  id=\"serie_motor\" /></div>\r\n                    \r\n                </div>\r\n            </div>\r\n        <!--</form>-->\r\n            <label>Mentiuni suplimentare(se completeaza automat):</label>\r\n            <div class=\"mentiuni w2ui-field\">\r\n                <input  type=\"text\" id=\"ment1\" maxlength=\"50\" readonly=\"readonly\" />\r\n                <input type=\"text\"  id=\"ment2\" maxlength=\"50\" readonly=\"readonly\" />\r\n                <input type=\"text\"  id=\"ment3\" maxlength=\"50\" readonly=\"readonly\" />\r\n                <input type=\"text\"  id=\"ment4\" maxlength=\"50\" readonly=\"readonly\" />\r\n                <input type=\"text\"  id=\"ment5\" maxlength=\"50\" readonly=\"readonly\" />\r\n            </div>\r\n        </div>\r\n        <div  style=\"height:100%\" id=\"date_tehnice\">\r\n            <div id=\"date_tehnice_container\">\r\n                <!-- <div class=\"accordion\" id=\"date-accordion\"></div> -->\r\n            </div>\r\n            <br>\r\n            <hr>\r\n            <div id=\"anvelope_container\" style=\"margin-top: 35px\">\r\n                <!-- <div class=\"accordion\" id=\"anvelope-accordion\"></div> -->\r\n            </div>\r\n        </div>\r\n    <!--end vehicule container-->\r\n        <div id=\"buttons_container\">\r\n        <div class=\"col-md-9\" id=\"operation_container\">\r\n            <button title=\"Inchide\" class=\"btn btn-default\" id=\"btnBack\"><i class=\"w2ui-icon-back\"></i> Inchide\r\n            </button>\r\n            <button title=\"Salvare\" class=\"btn btn-green\" id=\"btnSaveVehicul\"><i class=\"w2ui-icon-save\"></i> Salveaza\r\n            </button>\r\n            <button disabled title=\"Copiere\" class=\"btn btn-orange\" id=\"btnCopyVehicul\"><i class=\"w2ui-icon-paste\" ></i> Copiaza\r\n            </button>\r\n            <button disabled title=\"Date complete\" class=\"btn btn-blue\" id=\"btnVehiculComplet\"><i class=\"w2ui-icon-info\"></i> Fisa\r\n            </button>\r\n            <button  title=\"Fereastra noua\" class=\"btn btn-default\" id=\"btnNewWindow\"><i class=\"w2ui-icon-newwindow\"></i> Fereastra noua\r\n            </button>\r\n        </div>\r\n        <div class=\"col-md-3\" id=\"supervize_container\">\r\n            <button id=\"btnFirst\">|<</button>\r\n            <button id=\"btnPrev\"><</button>\r\n            <input type=\"text\" id=\"currentIndex\" style=\"width:50px\" readonly/>\r\n            <button id=\"btnNext\">></button>\r\n            <button id=\"btnLast\">>|</button>\r\n        </div>\r\n        </div>\r\n</div>\r\n";
   });
 
-},{"hbsfy/runtime":153}],83:[function(require,module,exports){
+},{"hbsfy/runtime":168}],91:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -4968,7 +5243,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div style=\"display:none\">\r\n	<input id=\"fileupload\" type=\"file\" class=\"file\" name=\"files[]\" multiple  accept=\".xls\">\r\n</div>\r\n<div id=\"grid\" class=\"page\"></div>";
   });
 
-},{"hbsfy/runtime":153}],84:[function(require,module,exports){
+},{"hbsfy/runtime":168}],92:[function(require,module,exports){
 var beneficiari;
 var ipc = requireNode('ipc');
 EditorView = window.Marionette.ItemView.extend({
@@ -5144,7 +5419,7 @@ EditorView = window.Marionette.ItemView.extend({
 });
 module.exports = EditorView;
 
-},{"./../../templates/cereri/editor.hts":45}],85:[function(require,module,exports){
+},{"./../../templates/cereri/editor.hts":45}],93:[function(require,module,exports){
 var ipc = requireNode('ipc');
 var fs = requireNode('fs');
 
@@ -5955,7 +6230,7 @@ module.exports = window.Marionette.ItemView.extend({
     }
 });
 
-},{"./../../templates/cereri/index.hts":46}],86:[function(require,module,exports){
+},{"./../../templates/cereri/index.hts":46}],94:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = window.Marionette.ItemView.extend({
     template: require('./../../templates/cereri/plati.hts'),
@@ -6263,7 +6538,7 @@ module.exports = window.Marionette.ItemView.extend({
     }
 });
 
-},{"./../../templates/cereri/plati.hts":47}],87:[function(require,module,exports){
+},{"./../../templates/cereri/plati.hts":47}],95:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = window.Marionette.ItemView.extend({
     template: require('./../../templates/cereri/situatie.hts'),
@@ -6528,7 +6803,7 @@ module.exports = window.Marionette.ItemView.extend({
     }
 });
 
-},{"./../../templates/cereri/situatie.hts":48}],88:[function(require,module,exports){
+},{"./../../templates/cereri/situatie.hts":48}],96:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = window.Marionette.ItemView.extend({
     template: require('./../templates/index.hts'),
@@ -6539,7 +6814,7 @@ module.exports = window.Marionette.ItemView.extend({
     }
 });
 
-},{"./../templates/index.hts":49}],89:[function(require,module,exports){
+},{"./../templates/index.hts":49}],97:[function(require,module,exports){
 module.exports = Marionette.ItemView.extend({
     template: require('./../../templates/individuale/anvelopaEditor.hbs'),
     attributes: function() {
@@ -6636,7 +6911,7 @@ module.exports = Marionette.ItemView.extend({
     }
 });
 
-},{"./../../templates/individuale/anvelopaEditor.hbs":50}],90:[function(require,module,exports){
+},{"./../../templates/individuale/anvelopaEditor.hbs":50}],98:[function(require,module,exports){
 var beneficiari;
 var ipc = requireNode('ipc');
 EditorView = window.Marionette.ItemView.extend({
@@ -6794,7 +7069,7 @@ EditorView = window.Marionette.ItemView.extend({
 });
 module.exports = EditorView;
 
-},{"./../../templates/individuale/editor.hts":51}],91:[function(require,module,exports){
+},{"./../../templates/individuale/editor.hts":51}],99:[function(require,module,exports){
 var ipc = requireNode('ipc');
 var FisierItemView = window.Marionette.ItemView.extend({
     template:require('./../../templates/individuale/fisier.hts'),
@@ -7024,7 +7299,7 @@ var FisierItemView = window.Marionette.ItemView.extend({
 
 });
 module.exports = FisierItemView;
-},{"./../../templates/individuale/fisier.hts":52}],92:[function(require,module,exports){
+},{"./../../templates/individuale/fisier.hts":52}],100:[function(require,module,exports){
  var FisierItemView = require('./fisier'),
      FisereView = window.Marionette.CompositeView.extend({
          className: 'accordion',
@@ -7053,7 +7328,7 @@ module.exports = FisierItemView;
         //  }
      });
  module.exports = FisereView;
-},{"./fisier":91}],93:[function(require,module,exports){
+},{"./fisier":99}],101:[function(require,module,exports){
 var ipc = requireNode('ipc');
 var fs = requireNode('fs');
 
@@ -7604,7 +7879,7 @@ module.exports = window.Marionette.ItemView.extend({
         app.module('appciv').controller.arhivareComandaIndividuale(id);
     },
 });
-},{"./../../templates/individuale/index.hts":53}],94:[function(require,module,exports){
+},{"./../../templates/individuale/index.hts":53}],102:[function(require,module,exports){
 var MentiuneItemView = window.Marionette.ItemView.extend({
     template:require('./../../templates/individuale/mentiune.hts'),
     events:{
@@ -7627,7 +7902,7 @@ var MentiuneItemView = window.Marionette.ItemView.extend({
     }
 });
 module.exports = MentiuneItemView;
-},{"./../../templates/individuale/mentiune.hts":54}],95:[function(require,module,exports){
+},{"./../../templates/individuale/mentiune.hts":54}],103:[function(require,module,exports){
     var AnvelopaEditor = require('./anvelopeEditor');
       var MentiuneItemView = require('./mentiune'),
      MentiuniView = window.Marionette.CompositeView.extend({
@@ -7703,7 +7978,7 @@ module.exports = MentiuneItemView;
          }
      });
  module.exports = MentiuniView;
-},{"./anvelopeEditor":89,"./mentiune":94}],96:[function(require,module,exports){
+},{"./anvelopeEditor":97,"./mentiune":102}],104:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = window.Marionette.CompositeView.extend({
     template: require('./../../templates/individuale/vehicule.hts'),
@@ -7865,7 +8140,7 @@ module.exports = window.Marionette.CompositeView.extend({
     }
 });
 
-},{"./../../templates/individuale/vehicule.hts":56}],97:[function(require,module,exports){
+},{"./../../templates/individuale/vehicule.hts":56}],105:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = window.Marionette.ItemView.extend({
     template: require('./../../templates/cereri/situatie.hts'),
@@ -8144,7 +8419,7 @@ module.exports = window.Marionette.ItemView.extend({
     }
 });
 
-},{"./../../templates/cereri/situatie.hts":48}],98:[function(require,module,exports){
+},{"./../../templates/cereri/situatie.hts":48}],106:[function(require,module,exports){
 var ipc = requireNode('ipc');
 var fs = requireNode('fs');
 var Globals = require('./../../globals');
@@ -8170,7 +8445,9 @@ var root, vehicul,
             'arhivare' : '#btnArhivare',
             'send' : '#btnSendVehicul',
             'fisa' : '#btnFisaVehicul',
-            'unlock':'#btnUnlock'
+            'unlock':'#btnUnlock',
+            'updDateSupl': '#btnUpdateDateSupl',
+            'versiuneField':'#versiune'
         },
         /**
          * ui event handlers
@@ -8191,7 +8468,9 @@ var root, vehicul,
             'click @ui.arhivare' : 'arhivare',
             'click @ui.send' : 'transmite',
             'click @ui.unlock' : 'unlock',
-            'click @ui.fisa' : 'fisa'
+            'click @ui.fisa' : 'fisa',
+            'click @ui.updDateSupl': 'updateDateSupl',
+            // 'blur @ui.versiuneField':'prepareData'
         },
         /**
          * model event handlers
@@ -8200,7 +8479,7 @@ var root, vehicul,
         modelEvents: {
             'change:wvta':'validateWVTA',
             'change:extensie':'extensieChanged',
-            'change:versiune':'prepareData',
+            'change:versiune':'selectData',
             'change:cod_motor':'motorChanged',
             'change:id_tvv':'reload'
         },
@@ -8209,7 +8488,7 @@ var root, vehicul,
          * @type {Object}
          */
         bindingsOverrides: {
-            'input:not("#nr_registru"),textarea:not("#motiv_respingere")': {
+            'input:not("#nr_registru,.date-suplim"),textarea:not("#motiv_respingere")': {
                 attributes: [{
                     name: 'disabled',
                     observe: 'stare',
@@ -8359,7 +8638,15 @@ var root, vehicul,
                         ]));
                     }
                 }]
-            }
+            },
+            '#btnUpdateDateSupl': {
+                observe: 'stare',
+                visible: function (value) {
+                    return value == 15 &&  !ipc.sendSync('user:request:isuserinrole', [
+                        [4,18], 'appciv'
+                    ]);
+                }
+            },
         },
 
         // <Constants>
@@ -8392,6 +8679,9 @@ var root, vehicul,
                 }
             }
         },
+        onRender: function(){
+            
+        },
         /**
          * on view attachet to DOM
          * @return {[type]} [description]
@@ -8399,6 +8689,7 @@ var root, vehicul,
         onShow: function () {
             //atriutele si mentiunile se vor afisa la schimbarea/alegerea extensiei in cazul
             //vehiculului nou
+            
             var pstyle = 'border: 1px solid #dfdfdf; padding: 10px;';
             //build layout
             if (!w2ui.hasOwnProperty('layoutVehicul')) {
@@ -8435,13 +8726,12 @@ var root, vehicul,
             if (!this.model.isNew()) {
                 this.renderfiles();
                 this.renderMentiuni();
-                if(!this.isClient){
-                    this.renderatributes();
-                    vehicul.loadListeAnvelope(this.model, this.renderanvelope);
-                }
+                // if(!this.isClient){
+                //     this.renderatributes();
+                //     vehicul.loadListeAnvelope(this.model, this.renderanvelope);
+                // }
                 // this.renderanvelope();
             }
-
             // if(this.model.get('nr_registru')){
             //     $('#btnAddFile,#btnAddMentiune').hide();
             //     $('input,textarea').attr('disabled','disabled');
@@ -8455,6 +8745,11 @@ var root, vehicul,
             if(this.isOperator){
                 $('#supervize_container').hide();
             }
+            this.$el.find('.w2ui-panel-title').click(function() {
+                $(this).next().toggle('fast');
+                return false;
+            })//.next().hide('fast');
+            
         },
 
         /**
@@ -8881,8 +9176,25 @@ var root, vehicul,
             this.model.set('motor',selected.id)
         },
         prepareData:function(v){
+            // var selected = $('#versiune').data('selected')
+            // this.model.set('id_tvv',selected.id)
+            // if(!this.model.get('id_tvv') && (this.model.get('versiune') != selected.text)){
+            //     w2confirm('Nu exista Nr. Omologare Parinte pentru acest TVV! Adaugati cerere generare?')
+            //     .yes(function(){
+            //         w2alert('Cererea a fost generata cu datele introduse! Dupa generarea numarului parinte va trebui sa completati vehiculul cu datele necesare!')
+            //     })
+            //     .no(function(){
+            //         w2alert('Pentru a genera numar parinte va trebui sa reintroduceti datele!')
+            //     })
+            // }
+        },
+
+        selectData:function(){
             var selected = $('#versiune').data('selected')
             this.model.set('id_tvv',selected.id)
+            // this.renderAnvelope()
+            // this.renderAtributes()
+            // this.renderMentiuni()
         },
 
         reload:function(){
@@ -8894,114 +9206,119 @@ var root, vehicul,
                 id: this.model.id && this.model.id !== 0 ? this.model.id : 0
             };
 
-        //     $.ajax({
-        //         url: root + 'vehicule/getwvta',
-        //         data: {
-        //             id_tvv: self.model.get('id_tvv')
-        //         },
-        //         success: function(response) {
-        //             self.model.set('categ_euro', response.categ_euro);
-        //             if (response.categ_euro.substr(0, 1) !== 'O' && response.categ_euro.substr(0, 1) !== 'R') {
-        //                     // $('#serie_motor').attr('disabled', null);
-        //                     // $('#motor').attr('disabled', null);
-        //                     $('#engine_container').show();
-        //                     $('#cod_motor').w2field().reinit();
-        //                     self.model.set('serie_motor', '').set('motor', '');
-        //                     if(response.categ_euro.split('|').length > 1){
-        //                         $('#categ_euro').w2field('list',{
-        //                             items:response.categ_euro.split('|')
-        //                         });
-        //                         $('#categorie').show();
-        //                     }else{
-        //                         $('#categorie').hide();
-        //                     }
-        //                 } else {
-        //                     console.log("Remorca!!");
-        //                     // $('#serie_motor').attr('disabled', true);
-        //                     // $('#motor').attr('disabled', true);
-        //                     $('#engine_container').hide();
-        //                 }
-        //             }
-        //         });
+            // $.ajax({
+            //     url: root + 'vehicule/getwvta',
+            //     data: {
+            //         id_tvv: self.model.get('id_tvv')
+            //     },
+            //     success: function(response) {
+            //         self.model.set('categ_euro', response.categ_euro);
+            //         if (response.categ_euro.substr(0, 1) !== 'O' && response.categ_euro.substr(0, 1) !== 'R') {
+            //                 // $('#serie_motor').attr('disabled', null);
+            //                 // $('#motor').attr('disabled', null);
+            //                 $('#engine_container').show();
+            //                 $('#cod_motor').w2field().reinit();
+            //                 self.model.set('serie_motor', '').set('motor', '');
+            //                 if(response.categ_euro.split('|').length > 1){
+            //                     $('#categ_euro').w2field('list',{
+            //                         items:response.categ_euro.split('|')
+            //                     });
+            //                     $('#categorie').show();
+            //                 }else{
+            //                     $('#categorie').hide();
+            //                 }
+            //             } else {
+            //                 console.log("Remorca!!");
+            //                 // $('#serie_motor').attr('disabled', true);
+            //                 // $('#motor').attr('disabled', true);
+            //                 $('#engine_container').hide();
+            //             }
+            //         }
+            //     });
             
-        //         self.model.get('Atribute').reset();
-        //         $.ajax({
-        //             url: root + 'individuale/getatributevehicul',
-        //             data: params,
-        //             dataType: 'json',
-        //             type: 'GET',
-        //             success: function(response) {
-        //                 if(response.error !==''){
-        //                     w2alert(response.error);
-        //                 }
-        //                 if(response.atribute.length == 0){
-        //                     $('#date_tehnice_container').hide()
-        //                     self.model.get('Atribute').reset();
-        //                     return;
-        //                 }else{
-        //                     $('#date_tehnice_container').show()
-        //                 }
-        //                 app.trigger('wltp:changed',response.iswltp == 1);
-        //                 self.model.get('Atribute').reset(response.atribute);
-        //                 if (self.isNew) {
-        //                     self.renderatributes(response.iswltp);
-        //                 }
-        //                 self.model.set('nr_registru',response.nr_registru);
-        //                 // self.model.get('Mentiuni').reset(response.mentiuni);
-        //                 var added = [];
+            //     self.model.get('Atribute').reset();
+            //     $.ajax({
+            //         url: root + 'individuale/getatributevehicul',
+            //         data: params,
+            //         dataType: 'json',
+            //         type: 'GET',
+            //         success: function(response) {
+            //             if(response.error !==''){
+            //                 w2alert(response.error);
+            //             }
+            //             if(response.atribute.length == 0){
+            //                 $('#date_tehnice_container').hide()
+            //                 self.model.get('Atribute').reset();
+            //                 return;
+            //             }else{
+            //                 $('#date_tehnice_container').show()
+            //             }
+            //             app.trigger('wltp:changed',response.iswltp == 1);
+            //             self.model.get('Atribute').reset(response.atribute);
+            //             if (self.isNew) {
+            //                 self.renderatributes(response.iswltp);
+            //             }
+            //             self.model.set('nr_registru',response.nr_registru);
+            //             // self.model.get('Mentiuni').reset(response.mentiuni);
+            //             var added = [];
                         
-        //                 response.mentiuni.split('\n').map(function(m,i){
-        //                     added.push({
-        //                         id:null,
-        //                         text:m,
-        //                         id_vehicul:self.model.id,
-        //                         nr_rand:i,
-        //                         nr_identif:self.model.get('vin')
-        //                     })
-        //                 });
-        //                 var currindex = added.length;
-        //                 self.existing.map(function(m){
-        //                     m.nr_rand = currindex;
-        //                     currindex ++;
-        //                 })
-        //                 var ment = added.concat(self.existing)
-        //                 self.model.get('Mentiuni').reset(ment);
-        //                 self.renderMentiuni();
-        //             },
-        //             error: function(response) {
-        //                 console.error(response);
-        //             }
-        //         });
-        //         //reload anvelope
-        //         self.model.get('Anvelope').reset();
-        //         $.ajax({
-        //             url: root + 'individuale/getanvelopevehicul',
-        //             data: params,
-        //             dataType: 'json',
-        //             type: 'GET',
-        //             success: function(response) {
-        //                 if(response.length == 0){
-        //                     $('#anvelope_container').hide()
-        //                     self.model.get('Anvelope').reset();
-        //                     return;
-        //                 }else{
-        //                     $('#anvelope_container').show()
-        //                 }
-        //                 vehicul.loadListeAnvelope(self.model, function() {
-        //                     self.model.get('Anvelope').reset(response);
-        //                     if (self.isNew) {
-        //                         self.renderanvelope();
-        //                     } else {
-        //                        app.module('appciv').trigger('anvelopeView:setSelect');
-        //                     }
-        //                     // self.renderanvelope();
-        //                 });
-        //             },
-        //             error: function(response) {
-        //                 console.error(response);
-        //             }
-        //         });
+            //             response.mentiuni.split('\n').map(function(m,i){
+            //                 added.push({
+            //                     id:null,
+            //                     text:m,
+            //                     id_vehicul:self.model.id,
+            //                     nr_rand:i,
+            //                     nr_identif:self.model.get('vin')
+            //                 })
+            //             });
+            //             var currindex = added.length;
+            //             self.existing.map(function(m){
+            //                 m.nr_rand = currindex;
+            //                 currindex ++;
+            //             })
+            //             var ment = added.concat(self.existing)
+            //             self.model.get('Mentiuni').reset(ment);
+            //             self.renderMentiuni();
+            //         },
+            //         error: function(response) {
+            //             console.error(response);
+            //         }
+            //     });
+            //     //reload anvelope
+            //     self.model.get('Anvelope').reset();
+            //     $.ajax({
+            //         url: root + 'individuale/getanvelopevehicul',
+            //         data: params,
+            //         dataType: 'json',
+            //         type: 'GET',
+            //         success: function(response) {
+            //             if(response.length == 0){
+            //                 $('#anvelope_container').hide()
+            //                 self.model.get('Anvelope').reset();
+            //                 return;
+            //             }else{
+            //                 $('#anvelope_container').show()
+            //             }
+            //             vehicul.loadListeAnvelope(self.model, function() {
+            //                 self.model.get('Anvelope').reset(response);
+            //                 if (self.isNew) {
+            //                     self.renderanvelope();
+            //                 } else {
+            //                    app.module('appciv').trigger('anvelopeView:setSelect');
+            //                 }
+            //                 // self.renderanvelope();
+            //             });
+            //         },
+            //         error: function(response) {
+            //             console.error(response);
+            //         }
+            //     });
          },
+        
+        updateDateSupl: function() {
+            var self = this;
+            console.log(self.model)
+        },
 
         reset:function(){
             var self = this;
@@ -9014,7 +9331,7 @@ var root, vehicul,
 
     });
 module.exports = EditView;
-},{"./../../globals":24,"./../../templates/individuale/vehicul1.hbs":55}],99:[function(require,module,exports){
+},{"./../../globals":24,"./../../templates/individuale/vehicul1.hbs":55}],107:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = window.Marionette.CompositeView.extend({
     template: require('./../../templates/individuale/vehicule.hts'),
@@ -9359,7 +9676,7 @@ module.exports = window.Marionette.CompositeView.extend({
     }
 });
 
-},{"./../../templates/individuale/vehicule.hts":56}],100:[function(require,module,exports){
+},{"./../../templates/individuale/vehicule.hts":56}],108:[function(require,module,exports){
 module.exports = Marionette.FormView.extend({
     template: require('./../../templates/registru/anvelopa.hbs'),
     attributes: function() {
@@ -9435,13 +9752,14 @@ module.exports = Marionette.FormView.extend({
     }
 });
 
-},{"./../../templates/registru/anvelopa.hbs":57}],101:[function(require,module,exports){
+},{"./../../templates/registru/anvelopa.hbs":57}],109:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = Marionette.ItemView.extend({
     className: 'fullscreen',
     template: require('./../../templates/registru/anvelope.hbs'),
     initialize: function() {
         this.setPagePermissions();
+        this.gridName = this.options.gridName? this.options.gridName:'gridAnvelope'
         //this.collection.setGridName('gridAnvelope');
     },
     // viewShown: function() {
@@ -9450,11 +9768,11 @@ module.exports = Marionette.ItemView.extend({
     // },
     refreshUI: function() {
         // if (!this.isrendered) {
-        if (w2ui.hasOwnProperty('gridAnvelope')) {
-            // w2ui.gridAnvelope.initToolbar();
-            // if (w2ui.gridAnvelope.toolbar != null) w2ui.gridAnvelope.toolbar.render($('#grid_' + w2ui.gridAnvelope.name + '_toolbar')[0]);
-            w2ui.gridAnvelope.records = this.collection.toJSON();
-            w2ui.gridAnvelope.refreshFull();
+        if (w2ui.hasOwnProperty(this.gridName)) {
+            // w2ui[this.gridName].initToolbar();
+            // if (w2ui[this.gridName].toolbar != null) w2ui[this.gridName].toolbar.render($('#grid_' + w2ui[this.gridName].name + '_toolbar')[0]);
+            w2ui[this.gridName].records = this.collection.toJSON();
+            w2ui[this.gridName].refreshFull();
             //console.log(this.collection.toJSON());
         }
         this.isrendered = true;
@@ -9472,7 +9790,7 @@ module.exports = Marionette.ItemView.extend({
     renderGrid: function() {
         var self = this;
         this.$el.find('#gridAnvelope').w2grid({
-            name: 'gridAnvelope',
+            name: self.gridName,
             records: self.collection.toJSON(),
             show: {
                 toolbar: true,
@@ -9559,7 +9877,7 @@ module.exports = Marionette.ItemView.extend({
 
     mvRecord:function(direction){
       var self = this;
-      var obj = w2ui.gridAnvelope;
+      var obj = w2ui[this.gridName];
       var selLength = obj.getSelection().length;
       var ind1 = obj.get(obj.getSelection()[0],true);
       var tmp = [];
@@ -9686,14 +10004,14 @@ module.exports = Marionette.ItemView.extend({
 
     },
     onBeforeDestroy: function() {
-        if (w2ui.hasOwnProperty('gridAnvelope'))
-            w2ui.gridAnvelope.destroy();
+        if (w2ui.hasOwnProperty(this.gridName))
+            w2ui[this.gridName].destroy();
         // if (w2ui.hasOwnProperty('gridSursaAnvelope'))
         //     w2ui.gridSursaAnvelope.destroy();
     },
     enableEdit:function(){
-      w2ui.gridAnvelope.toolbar.enable('w2ui-add');
-      w2ui.gridAnvelope.toolbar.enable('w2ui-edit');
+      w2ui[this.gridName].toolbar.enable('w2ui-add');
+      w2ui[this.gridName].toolbar.enable('w2ui-edit');
     },
     openEdit: function(id) {
         var m,View;
@@ -9717,7 +10035,7 @@ module.exports = Marionette.ItemView.extend({
     }
 });
 
-},{"./../../models/registru/anvelopa":32,"./../../templates/registru/anvelope.hbs":59,"./anvelopa":100,"./anvelopeEditor":102}],102:[function(require,module,exports){
+},{"./../../models/registru/anvelopa":32,"./../../templates/registru/anvelope.hbs":59,"./anvelopa":108,"./anvelopeEditor":110}],110:[function(require,module,exports){
 module.exports = Marionette.ItemView.extend({
     template: require('./../../templates/registru/anvelopaEditor.hbs'),
     attributes: function() {
@@ -9832,7 +10150,1203 @@ module.exports = Marionette.ItemView.extend({
     }
 });
 
-},{"./../../models/registru/anvelopa":32,"./../../templates/registru/anvelopaEditor.hbs":58}],103:[function(require,module,exports){
+},{"./../../models/registru/anvelopa":32,"./../../templates/registru/anvelopaEditor.hbs":58}],111:[function(require,module,exports){
+ var AtributItemView = window.Marionette.ItemView.extend({
+     source: undefined,
+     className: 'w2ui-field',
+     bindings: {
+         '[name="val"]': 'val',
+         '[name="label"]': 'nume',
+         '[name="min"]': 'val_min',
+         '[name="max"]': 'val_max'
+     },
+
+     getTemplate: function() {
+         switch (this.model.get('tip')) {
+             case 'interval':
+                 return require('./../../templates/registru/atributItemTemplate.hbs');
+             case 'lista':
+                 return require('./../../templates/registru/atributDropTemplate.hbs');
+             case 'liber':
+                 return require('./../../templates/registru/atributFreeTemplate.hbs');
+             case 'tag':
+                return require('./../../templates/registru/tag.hbs');
+             default:
+                 return require('./../../templates/registru/atributFreeTemplate.hbs');
+         }
+
+     },
+     initialize: function() {
+         this.source = this.model.get('source');
+     },
+     onRender: function() {
+        if (this.model.get('tip') === 'interval') {
+             this.setNumeric();
+         }else if ((this.model.get('tip') === 'lista' || this.model.get('source')) && this.model.get('id_nom') != 24) {
+             this.setSelect();
+         }
+         this.stickit();
+         this.listenTo(this.model, 'change', function() {
+             app.module('appciv').trigger('attachedProp:changed');
+         });
+
+     },
+     setSelect: function() {
+         var mdl = this.model;
+         console.log('Model', mdl)
+         if (this.source !== '' && this.source !== undefined && this.source !== null) {
+             var data = this.source.split('|'),
+                 sursa = [],
+                 ctl = this.$el.find('[name="val"]');
+             // daca exista o singura valoare sau suntem in mod editare si valoarea nu este egala cu valoarea unica,
+             // afisam atributul pentru a putea fi corectat
+             //altfel nu afisam atributul, pentru ca singura valoare posibila este valoarea unica
+             //if (data.length > 1 || (this.model.get('EntityState') === 3 && this.model.get('val') !== data[0])) {
+             $.each(data, function(index, v) {
+                 sursa.push({
+                     id: v,
+                     text: v
+                 });
+             });
+             if(mdl.get('tip') === 'tag'){
+                var selected = mdl.get('val')?mdl.get('val').split('|'):[]
+                ctl.w2field('enum',{
+                    items:sursa,
+                    openOnFocus:true,
+                    selected:selected
+                }).on('change', function() {
+                    var selected = $(this).data('selected');
+                    var val = '';
+                    selected.map(function(el){
+                        val += '|' + el.text;
+                    });
+                    mdl.set('val', val.substr(1,val.length));
+                });
+             }else{
+                 ctl.w2field('list', {
+                     selected: {
+                         id: mdl.get('val'),
+                         text: mdl.get('val')
+                     },
+                     items: sursa
+                 });
+             }
+            //  } else {
+            //     this.model.set('val', data[0]);
+            //     ctl.parent().remove();
+            //  }
+
+                            // if (self.model.get('EntityState')===0) {
+                            //     self.model.set('val',source.split(',')[0]);
+                            // }
+        //  }else if(mdl.get('writeto')){
+        //     ctl = this.$el.find('[name="val"]');
+        //     ctl.w2field('list', {
+        //         items: JSON.parse(mdl.get('writeto'))
+        //     });
+        //  }
+         }
+     },
+     setNumeric: function() {
+        if(Number(this.model.get('val_min'))<=Number(this.model.get('val_max')) && Number(this.model.get('val_min'))!==0){
+            var min = 0;
+            var max = this.model.get('val_max');
+            switch(this.model.get('id_nom'))
+            {
+                case 18:
+                    min = 0;
+                    break;
+                default:
+                    min = this.model.get('val_min');
+                    break;
+            }
+             this.$el.find('[name="val"]').w2field('int', {
+                 min: parseInt(min),
+                 max: parseInt(max)
+             });
+         }
+
+     },
+     serializeData: function() {
+         return {
+             index: this.options.index
+         };
+     }
+ });
+ module.exports = AtributItemView;
+
+},{"./../../templates/registru/atributDropTemplate.hbs":60,"./../../templates/registru/atributFreeTemplate.hbs":61,"./../../templates/registru/atributItemTemplate.hbs":62,"./../../templates/registru/tag.hbs":80}],112:[function(require,module,exports){
+ var AtributItemView = require('./atribut'),
+     AtributeAccordionView = window.Marionette.CompositeView.extend({
+         className: 'accordion',
+         childView: AtributItemView,
+         initialize:function(){
+             var self = this;
+             self.iswltp = this.options.iswltp;
+             //294 - masa incercare
+             //301 - CO2 NEDC
+             //290 - CO2 WLTP
+             //309 - autonomie
+             // 184 - cons en el
+             this.wltpAttrs = [141,291,292,293,295,296,297,298,299,300, 301];
+             this.nedcAttrs = [141,142,246,247,248];
+             co2wltp = this.options.collection.find(function(m){return m.get('id_nom') == '290'});
+             if(co2wltp){
+                 this.iswltp = (co2wltp.get('val_min') && co2wltp.get('val_min') != '0') || (co2wltp.get('val_max') && co2wltp.get('val_max') != '0');
+             }
+             this.listenTo(app,'wltp:changed',function(val){
+                self.iswltp = val;
+             })
+         },
+         getTemplate: function() {
+             var coll = this.collection,
+                 html = '<form role="form" class="form-inline">', //= '<script id="layout-view-template" type="text/template">',
+                 atrs = _.groupBy(coll.toJSON(), 'grupa');
+             $.each(atrs, function(i, grp) {
+                 ///append accordion element to dom
+                 html +=
+                     '<div id="panel-'+i+'" class="panel panel-primary hide">' +
+                     '<div class="w2ui-panel-title">' + i.charAt(0).toUpperCase() + i.slice(1) + '</div>' +
+                     '<div class="panel-body" id="' + i + '"></div>' +
+                     '</div>';
+             });
+             html += '</form>';
+
+             return html;
+         },
+         childViewOptions: function(model) {
+             return {
+                 index: this.collection.indexOf(model)
+             };
+         },
+         attachHtml: function(collectionView, itemView, index) {
+             //itemView.$el.addClass('form-group );
+             var data, v, min, max;
+             itemView.model.set('index', index);
+             min=Number(itemView.model.get('val_min'));
+             max=Number(itemView.model.get('val_max'));
+             var sourceOfValues=itemView.model.get('source');
+             v= itemView.model.get('val');
+             // show-hide attributes 
+             // daca exista o singura valoare sau suntem in mod editare si valoarea nu este egala cu valoarea unica, 
+             // afisam atributul pentru a putea fi corectat
+             //altfel nu afisam atributul, pentru ca singura valoare posibila este valoarea unica
+            
+
+             /*if (itemView.model.get('tip') === 'lista') {
+                 data = itemView.model.get('source').split('|');
+                 if (data.length <= 1 || (itemView.model.get('val') === data[0])) {
+                     return; //iesim, conditia de afisare nu este ndeplinita
+                 }
+
+             } else if (itemView.model.get('tip') === 'interval') {
+                 v = (itemView.model.get('val') === '' || itemView.model.get('val') === null) && itemView.model.get('min') !== 0 ? itemView.model.get('min') : itemView.model.get('val');
+                 min = itemView.model.get('val') !== null && itemView.model.get('min') === 0 ? itemView.model.get('val') : itemView.model.get('min');
+                 max = itemView.model.get('val') !== null && itemView.model.get('max') === 0 ? itemView.model.get('val') : itemView.model.get('max');
+                 if (itemView.model.get('val') !== null) {
+                     v = Number(itemView.model.get('val'));
+                     min = itemView.model.get('min') === 0 ? itemView.model.get('val') : itemView.model.get('min');
+                     max = itemView.model.get('max') === 0 ? itemView.model.get('val') : itemView.model.get('max');
+                     if (min === max) {
+                         v = min;
+                     }
+
+                 } else {
+                     if (itemView.model.get('min') === 0 && itemView.model.get('max') !== 0) {
+                         v = itemView.model.get('max');
+                         min = itemView.model.get('max');
+                         max = itemView.model.get('max');
+                     } else if (itemView.model.get('max') === 0 && itemView.model.get('min') !== 0) {
+                         v = itemView.model.get('min');
+                         min = itemView.model.get('min');
+                         max = itemView.model.get('min');
+                     } else if (itemView.model.get('max') === 0 && itemView.model.get('min') === 0) {
+                         v = 0;
+                         min = 0;
+                         max = 0;
+                     } else {
+
+                     }
+                 }
+                 if (min === max && ((itemView.model.get('val') >= min && itemView.model.get('val') <= max))) { //vezi mai sus self.model.get('EntityState')===3 &&
+                     // if(min==="0"&&max==="0"){
+                     // itemView.model.set('val',0);
+                     // }
+                     return; //atributul e ok, putem sa-l scoatem de pe pagina 
+                 } else {
+                     itemView.model.set('val', v);
+                 }
+             }*/
+
+             //refactor!!
+             if(itemView.model.get('id_nom') == 24 && this.iswltp){
+                collectionView.$('#' + itemView.model.get('grupa')).append(itemView.el).parent().removeClass('hide');
+                return;
+             }
+             if(itemView.model.get('id_nom') == 290 && this.iswltp){// show alt cod for getting wltp co2
+                collectionView.$('#' + itemView.model.get('grupa')).append(itemView.el).parent().removeClass('hide');
+                return;
+             }
+             if(this.wltpAttrs.indexOf(itemView.model.get('id_nom'))!==-1) return;// exclude other wltp attrs
+             if(this.iswltp && this.nedcAttrs.indexOf(itemView.model.get('id_nom')) != -1) return; // exclude nedc (not required) if is wltp
+             if(itemView.model.get('tip')==='interval'){//valoare de tip interval - se verifica min!=max si max!=0
+                if(min===max || max===0){
+                    if(itemView.model.get('val') && Number(itemView.model.get('val'))!==min){
+                        //return;
+                    }
+                    else{
+                        //setam valoarea cu min si scoatem atributul de pe pagina
+                        itemView.model.set('val',min);
+                        return;
+                    }
+                    
+                }
+             }
+             else if(!sourceOfValues && itemView.model.get('id_nom') === 28){//tip transmisie nu este obligatoriu decat daca au fost specificate valori la omologare
+                return;
+             }
+             else if(!sourceOfValues){
+                // atribut adaugat suplimentar
+             }
+             else if(sourceOfValues.split('|').length===1){
+                //nu avem valori multiple de selectie - setam valoarea cu sursa de date si scoatem atributul de pe pagina
+                itemView.model.set('val',sourceOfValues);
+                    return;
+             }
+             else if(min===0 && max===0 && sourceOfValues.split('|').length===1){
+                itemView.model.set('val',sourceOfValues);
+                    return;
+             }else{
+                //$('#panel-'+itemView.model.get('grupa'));
+             }
+             collectionView.$('#' + itemView.model.get('grupa')).append(itemView.el).parent().removeClass('hide');
+         },
+         onRender: function() {
+             //initialize accordion effect
+             this.$el.find('.w2ui-panel-title').click(function() {
+                 $(this).next().toggle('fast');
+                 return false;
+             }).next().hide('fast');
+         }
+     });
+ module.exports = AtributeAccordionView;
+
+},{"./atribut":111}],113:[function(require,module,exports){
+var ipc = requireNode('ipc');
+var fs = requireNode('fs');
+var Globals = require('../../globals');
+var root, vehicul,
+    EditView = window.Marionette.FormView.extend({
+        className: 'page',
+        /**
+         * view related properties
+         * @type {Object}
+         */
+        ui: {
+            'save': '#btnSaveVehicul',
+            'info': '#btnVehiculComplet',
+            'back': '#btnBack',
+            'addMentiune': '#btnAddMentiune',
+            'validare':'#btnValidare'
+        },
+        /**
+         * ui event handlers
+         * @type {Object}
+         */
+        events: {
+            'click @ui.save': 'save',
+            'click @ui.back': 'back',
+            'click @ui.addMentiune': 'addMentiune',
+            'click @ui.validare' : 'validare',
+        },
+        /**
+         * model event handlers
+         * @type {Object}
+         */
+        modelEvents: {
+            'change:wvta':'validateWVTA',
+            'change:extensie':'extensieChanged',
+            'change:versiune':'selectData',
+            'change:cod_motor':'motorChanged',
+            'change:id_tvv':'reload'
+        },
+        /**
+         * model link to controls
+         * @type {Object}
+         */
+        bindingsOverrides: {
+            'input:not("#nr_registru,.date-suplim"),textarea:not("#motiv_respingere")': {
+                attributes: [{
+                    name: 'disabled',
+                    observe: 'stare',
+                    onGet: function (value) {
+                        return (ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]) && value != 1) || value == 19 || value == 12 || value == 15 || value == 11;
+                    },
+                    onSet: function (value) {
+                        return (ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]) && value != 1) || value == 19 || value == 12 || value == 15 || value == 11;
+                    }
+                }]
+            },
+            //disable copy button for new records
+            '#btnValidare': {
+                attributes: [{
+                    name: 'disabled',
+                    observe: '[id,stare]',
+                    onGet: function (value,status) {
+                        return !value && status < 10;
+                    }
+                }]
+            },
+            //disable info button for new records
+            '#btnVehiculComplet': {
+                attributes: [{
+                    name: 'disabled',
+                    observe: 'stare',
+                    onGet: function (value) {
+                        return (ipc.sendSync('user:request:isuserinrole', [
+                            [4], 'appciv'
+                        ]) || value <= 10) || value > 12 ;
+                    }
+                }]
+            },
+            '#nr_registru': {
+                observe: 'nr_registru',
+                attributes: [{
+                    name: 'disabled',
+                    observe: 'stare',
+                    onGet: function (value) {
+                        return ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]) || value > 10;
+                    }
+                }],
+                onSet:function(val){
+                    return val.toUpperCase();
+                }
+            },
+            '#motiv_respingere': {
+                observe: 'motiv_respingere',
+                attributes: [{
+                    name: 'disabled',
+                    observe: 'stare',
+                    onGet: function (value) {
+                        return ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]) || value > 10;
+                    }
+                }]
+            },
+            '.mentiuni': {
+                attributes: [{
+                    name: 'disabled',
+                    observe: 'id',
+                    onGet: function (value) {
+                        return ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]);
+                    }
+                }]
+            },
+            '#btnAddMentiune,#btnVehiculComplet,#btnArhivare,#btnNewWindow,#btnUnlock': {
+                visible: function () {
+                    return !ipc.sendSync('user:request:isuserinrole', [
+                        [4,18], 'appciv'
+                    ]);
+                }
+            },
+            '#btnVehiculComplet,#btnArhivare':{
+                visible: function () {
+                    return !ipc.sendSync('user:request:isuserinrole', [
+                        [4], 'appciv'
+                    ]);
+                }
+            },
+            '#btnNewWindow,#btnUnlock':{
+                attributes: [{
+                    name: 'disabled',
+                    observe: 'stare',
+                    onGet: function (value) {
+                        return (ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]) || value >= 15) ;
+                    }
+                }]
+            },
+            '#btnSendVehicul':{
+                attributes: [{
+                    name: 'disabled',
+                    observe: 'stare',
+                    onGet: function (value) {
+                        return (!ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]) || value != 1) ;
+                    }
+                }]
+            },
+            '#btnSaveVehicul,#btnValidare': {
+                attributes: [{
+                    name: 'disabled',
+                    observe: 'stare',
+                    onGet: function (value) {
+                        return (value > 10 && ipc.sendSync('user:request:isuserinrole', [
+                            [15, 1], 'appciv'
+                        ])) || (value >= 10 && ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]));
+                    },
+                    onSet: function (value) {
+                        return (value > 10 && ipc.sendSync('user:request:isuserinrole', [
+                            [15, 1], 'appciv'
+                        ])) || (value >= 10 && ipc.sendSync('user:request:isuserinrole', [
+                            [4,18], 'appciv'
+                        ]));
+                    }
+                }]
+            }
+        },
+
+        // <Constants>
+        template: require('./../../templates/registru/cerereCOC.hbs'),
+        initialize: function () {
+            var self = this;
+            _.bindAll(this, 'renderanvelope');
+            this.setPermissions();
+            //property - holds window state(inline or dialog)
+            this.isDialog = false;
+            root = app.baseUrl;
+            //cache module controller for convenience
+            vehicul = app.module('appciv').controller;
+            //set view type
+            this.setViewType();
+        },
+        setPermissions: function () {
+            this.isOperator = ipc.sendSync('user:request:isuserinrole', [[18], 'appciv']);
+            this.isClient = ipc.sendSync('user:request:isuserinrole', [[4], 'appciv']);
+            this.isAdmin = ipc.sendSync('user:request:isuserinrole', [[1], 'appciv']);
+        },
+        /**
+         * set view type -is copy or fresh record
+         */
+        setViewType: function () {
+            var isCopy = this.model.get('isCopy');
+            if (!this.model.id) {
+                if (!isCopy) {
+                    this.isNew = true;
+                }
+            }
+        },
+        onRender: function(){
+            
+        },
+        /**
+         * on view attachet to DOM
+         * @return {[type]} [description]
+         */
+        onShow: function () {
+            //atriutele si mentiunile se vor afisa la schimbarea/alegerea extensiei in cazul
+            //vehiculului nou
+            
+            var pstyle = 'border: 1px solid #dfdfdf; padding: 10px;';
+            //build layout
+            if (!w2ui.hasOwnProperty('layoutVehicul')) {
+                $('#vehiculTemplate').w2layout({
+                    name: 'layoutVehicul',
+                    panels: [{
+                            type: 'left',
+                            size: '50%',
+                            style: pstyle,
+                            title: 'Date principale',
+                            resizable: true,
+                            content: $('#date_principale').html()
+                        }, {
+                            type: 'main',
+                            size: '50%',
+                            title: 'Date tehnice',
+                            style: pstyle,
+                            content: $('#date_tehnice').html()
+                        }, {
+                            type: 'bottom',
+                            size: 60,
+                            style: pstyle,
+                            content: $('#buttons_container').html()
+                        }
+
+                    ]
+                });
+            }
+            //set dropdowns for controls that suport it
+            this.setupView();
+            // cache original mentiuni
+            this.existing = this.model.get('Mentiuni').toJSON()
+            //if record is in update state we enable buttons and render child records and "mentiuni" property
+            if (!this.model.isNew()) {
+                //this.renderfiles();
+                this.renderMentiuni();
+                if(!this.isClient){
+                    this.renderatributes();
+                    vehicul.loadListeAnvelope(this.model, this.renderanvelope);
+                }
+                // this.renderanvelope();
+            }
+            // if(this.model.get('nr_registru')){
+            //     $('#btnAddFile,#btnAddMentiune').hide();
+            //     $('input,textarea').attr('disabled','disabled');
+            // }
+
+            if (this.model.id) {
+                // console.log(this.options);
+                // this.relatedVehicles = this.options.relatedVehicles;
+                // this.prepareFormNavigation();
+            }
+            if(this.isOperator){
+                $('#supervize_container').hide();
+            }
+            this.$el.find('.w2ui-panel-title').click(function() {
+                $(this).next().toggle('fast');
+                return false;
+            })//.next().hide('fast');
+            
+        },
+
+        /**
+         * Prepare prev next navigation
+         **/
+        prepareFormNavigation: function () {
+            this.currentIndex = this.relatedVehicles.indexOf(this.model.id) + 1;
+            $('#currentIndex').val(this.currentIndex);
+        },
+
+        /**
+         * go to previous page
+         * if this is dialog then we close it
+         * @return {[type]} [description]
+         */
+        back: function () {
+            var self = this;
+            if (this.isDialog) {
+                _.find(w2ui.panels, function (p) {
+                    return p.name === 'editVeh' + self.cid;
+                }).destroy();
+
+            }else if(self.isOperator){
+                app.module('appciv').router.navigate('appciv/listaCereriOmologare', {
+                    trigger: true
+                });
+            } else {
+                app.module('appciv').router.navigate('appciv/listaCereriOmologare', {
+                    trigger: true
+                });
+            }
+        },
+
+        renderfiles: function () {
+            var options = {
+                element: '#files_list_container',
+                editable: !this.model.get('nr_registru'),
+                id_vehicul: this.model.get('id')
+            };
+            vehicul.renderFiles(options);
+        },
+
+        renderMentiuni: function () {
+            var options = {
+                element: '#mentiuni_container',
+                mentiuni: this.model.get('Mentiuni'),
+                vin: this.model.get('vin'),
+                editable: !this.model.get('nr_registru'),
+            };
+            vehicul.renderMentiuni(options);
+        },
+        renderatributes: function(param) {
+            var options = {
+                element: '#date_tehnice_container',
+                atributes: this.model.get('Atribute'),
+                iswltp:param
+            };
+            vehicul.renderAtributeTvv(options);
+        },
+        renderanvelope: function() {
+            var self = this;
+            var options = {
+                element: '#anvelope_container',
+                anvelope: self.model.get('Anvelope')
+            };
+            vehicul.renderAnvelope(options);
+        },
+
+        /**
+         * validate vin property - only alfanumeric
+         * @param  {[type]} e [description]
+         * @return {[type]}   [description]
+         */
+        validatenewvin: function (e) {
+            var errors = {};
+            var data = [];
+            errors.data = data;
+            var real_vin = this.model.get('vin');
+            if (!real_vin) {
+                data.push({
+                    name: 'vin',
+                    message: 'Camp obligatoriu!'
+                });
+                //app.Util.showError({}, errors);
+                w2utils.validateRaw(this.$el, data);
+                return false;
+            }
+            var vin = real_vin.toUpperCase();
+            var regex = /^[A-HJ-NP-Z0-9]+$/; ///^\w+$/; ///^[0-9A-Za-z]+$/;
+            //var wild = /^$/;
+
+            if (vin !== undefined && vin.length > 0) {
+                if (regex.test(vin) && vin.length === 17) {
+                    //app.Util.removeError($('#vin').parent());
+                    this.model.set('vin', vin);
+                    return true;
+                    //}else if(wild.test(vin)){
+
+                } else {
+                    data.push({
+                        name: 'vin',
+                        message: 'Valoare incorecta!'
+                    });
+                    //app.Util.showError({}, errors);
+                    w2utils.validateRaw(this.$el, data);
+                    return false;
+                }
+            } else {
+                data.push({
+                    name: 'vin',
+                    message: 'Camp obligatoriu!'
+                });
+                //app.Util.showError({}, errors);
+                w2utils.validateRaw(this.$el, data);
+                return false;
+            }
+        },
+        save: function () {
+            var self = this;
+            var options = {
+                success: function (model) {
+                    w2utils.unlock(self.$el);
+                    var opt = {
+                        text: 'Inregistrarea a fost salvata!',
+                        title: 'Notificare',
+                        type: 'success-template'
+                    };
+                    ipc.send('app:notification:show', opt);
+                    if (self.model.get('isCopy')) {
+                        app.router.navigate('appciv/detaliiVehiculIndividuale/' + model.id);
+                        self.model.set('isCopy', false);
+                    }
+
+                    self.enableCopy();
+                    self.renderfiles();
+                },
+                error: function (model, response) {
+                    w2utils.unlock(self.$el);
+                    // we get the errors as a string. This was implemented so that we can show
+                    // both errors comming from server and from client. We modded the validate
+                    // function of the model so that it returns a JSON string containing an element named errors
+                    // from server we get the same result
+                    if (response.status !== 401) {
+                        var opt = {
+                            text: 'Eroare la salvare!',
+                            title: 'Notificare',
+                            type: 'error-template'
+                        };
+                        ipc.send('app:notification:show', opt);
+                        var data = eval('(' + response.responseText + ')');
+                        //console.log(data);
+                        w2utils.validateRaw(self.$el, data.data);
+                    }
+                }
+            };
+            self.model.set('tip_omologare','OMOLOGARE CU COC')
+            self.model.set('cod_tip_omologare','C')
+            console.log(self.model.toJSON());
+            if (w2utils.validate(self.model, self.$el)) {
+                w2utils.lock(self.$el,'Va rugam asteptati...');
+                $.ajax({
+                    type:'POST',
+                    url:app.baseUrl + 'doiit/GetTVVExtensieCerere',
+                    data:JSON.stringify(self.model.toJSON()),
+                    contentType:'application/json',
+                    dataType:'json',
+                    success:function(){
+                        w2utils.unlock(self.$el);
+                        var opt = {
+                            text: 'Cererea a fost creata!',
+                            title: 'Notificare',
+                            type: 'success-template'
+                        };
+                        ipc.send('app:notification:show', opt);
+                    },
+                    error: function (model, response) {
+                        w2utils.unlock(self.$el);
+                        // we get the errors as a string. This was implemented so that we can show
+                        // both errors comming from server and from client. We modded the validate
+                        // function of the model so that it returns a JSON string containing an element named errors
+                        // from server we get the same result
+                        if (response.status !== 401) {
+                            var opt = {
+                                text: 'Eroare la salvare!',
+                                title: 'Notificare',
+                                type: 'error-template'
+                            };
+                            ipc.send('app:notification:show', opt);
+                            var data = eval('(' + response.responseText + ')');
+                            //console.log(data);
+                            w2utils.validateRaw(self.$el, data.data);
+                        }
+                    }
+                    //POST la server, se creaza cererea
+                    // validarea se face dupa, poate e necesar ca alt user sa faca generarea
+                })
+                //self.model.save({}, options);
+                //console.log(self.model.toJSON());
+            }
+        },
+        copy: function () {
+            //this._modelBinder.unbind();
+
+            // var Prototype = app.module('vehicul').VehiculModel;
+            // var newmodel = this.model; //new Prototype(this.model.toJSON());
+            $('#culoare').w2field().reinit();
+            this.model.set('EntityState', 0).set('vin', '')
+                .set('isCopy', true)
+                .set('serie_motor', '')
+                .set('culoare', '')
+                .unset('id');
+            this.isCopy = true;
+            this.disableCopy();
+            this.$el.find('#date_tehnice_container').empty();
+            // app.router.navigate('#/appciv/copyVehicul/' + this.model.get('id'), {
+            //     trigger: false
+            // });
+
+        },
+        fisa: function(){
+            var self = this;
+            var path = app.baseUrl + 'civfiles/GetRaportVehicul?id=' + this.model.get('id');
+            if(this.model.get('nr_factura')){
+                ipc.send('app:request:pdf', [path]);
+            }else{
+                var template = '<div class="w2ui-page page-0 modalContent" id="platafact_container">'+
+                                    '<h3 style="text-align:center">Alegeti factura cu care s-a achitat C.I.V.</h3>'+
+                                    '<div class="w2ui-field">'+
+                                        '<label>Numar factura</label>'+
+                                        '<div>'+
+                                            '<input type="text" id="nrfact" size="60" />'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</div>';
+                this.plata = $(template).w2panel({
+                    name: 'platafact',
+                    title: 'Date factura',
+                    width: '600px',
+                    showMin: false,
+                    modal:true,
+                    showMax: false,
+                    height: '250px',
+                    resizable: true,
+                    useraction:function(){
+                        self.model.set('nr_factura',$('#nrfact').data('selected').text);
+                        $.post(app.baseUrl + 'individuale/savefacturavehicul',{id_vehicul:self.model.get('id'),id_factura:$('#nrfact').data('selected').id},function(){
+                            w2panel.destroy();
+                        });
+                    },
+                    buttons:'<button class="btn btn-blue" onclick="w2panel.useraction();">OK</button> '+
+                            '<button class="btn btn-red cancel" onclick="w2panel.close();">Cancel</button>',
+                    onOpen: function(event) {
+                        event.onComplete = function(){
+                            $('#platafact_container').find('#nrfact').w2field('list',{
+                                url:app.baseUrl+'individuale/getfacturiindividuale',
+                                minLength:-1,
+                                match:'contains',
+                                renderDrop: function(e) {
+                                    console.log(e);
+                                    return '<td>' + e.text + '</td><td style="padding-left:3px">' + e.benef + '</td><td style="padding-left:3px"> '+e.ramase+'</td>';
+                                },
+                            });
+                        };
+                    },
+                    onClose: function(event) {
+                       event.onComplete = function(){ipc.send('app:request:pdf', [path]);};
+                    }
+                });
+            }
+        },
+        info: function () {
+            var civnou = localStorage.getItem('civnou') && localStorage.getItem('civnou')=='true';
+            var tipciv = civnou?'N':'V';
+            var x = 0;
+            var y = 0;
+            try {
+                var configPrinter = JSON.parse(fs.readFileSync('configPrinters.json'));
+                var active = _.findWhere(configPrinter, {
+                    default: true
+                });
+                x = active.x;
+                y = -active.y;
+            } catch (ex) {
+
+            }
+            var self = this;
+            var id = self.model.id;
+            var reprez = ipc.sendSync('user:request:reprezentanta');
+            var path = civnou? app.civUrl +this.model.get('vin')+'?org=dot&reprez='+reprez + '&x=' + x + '&y=' + y:app.baseUrl + 'individuale/GetTiparCIVComanda?id=' + this.model.get('id_comanda') + '&x=' + x + '&y=' + y + '&vin=' + self.model.get('vin');
+            //civ nou http://10.2.2.84/restservice/api/printciv/1234?org=dot
+            ipc.send('app:request:pdf', [path, function (win) {
+                win.on('closed', function () {
+                    w2confirm({
+                        msg: 'Finalizati tiparirea CIV?',
+                        opt: false,
+                        opt_text: 'Verificat!',
+                        no_class: 'btn-red',
+                        yes_class: 'btn-blue',
+                        opt_class: 'btn-orange'
+                    }).yes(function () {
+                        $.post(app.baseUrl + 'individuale/finalizeCIV/' + id+'?tipciv='+tipciv, {}, function (stare) {
+                            self.model.set('stare',stare);
+                        });
+                        win.close(true);
+                    }).no(function () {
+                        win.close(true);
+                    }).opt(function () {
+                        $.post(app.baseUrl + 'individuale/verificatCIV/' + id, {}, function () {
+                            // w2ui.gridCereri.set(id[0], {
+                            //     depusa: 18
+                            // });
+                        });
+                        win.close(true);
+                    });
+                });
+            }]);
+        },
+        // modelChanged: function(e) {
+        //     this.listenToOnce(this.model,'change',this.modelChanged);
+        //     var self = this;
+        //     self.disableCopy();
+        //     $.each(e.changedAttributes(), function(i, value) {
+        //         if (i !== 'vin') {
+        //             if(i==='id_tvv'){
+        //                 console.log('tvv changed');
+        //             }else if(i==='id_extensie'){
+        //                 console.log('extensie changed');
+        //             }
+        //             //app.Util.removeError($('#' + i).parent());
+        //         }
+        //     });
+        // },
+        disableCopy: function () {
+            $('#btnCopyVehicul').attr('disabled', true);
+            $('#btnVehiculComplet').attr('disabled', true);
+            $('#btnArhivare').attr('disabled', true);
+        },
+        enableCopy: function () {
+            $('#btnCopyVehicul').attr('disabled', null);
+            // $('#btnVehiculComplet').attr('disabled', null);
+            // $('#btnArhivare').attr('disabled', null);
+        },
+        onBeforeDestroy: function () {
+            w2ui.layoutVehicul.destroy();
+            if (this.win) {
+                this.win.destroy();
+            }
+        },
+
+        
+
+        newwin: function () {
+            var self = this;
+            $('#btnNewWindow').hide();
+            this.isDialog = true;
+            self.win = $(this.el).w2panel({
+                name: 'editVeh' + this.cid,
+                showMax: true,
+                showMin: true,
+                preserveContent: true,
+                width: 800,
+                height: 600,
+                resizable: true,
+                maximized: true
+            });
+            w2ui.layoutVehicul.resize();
+            self.win.on('close', function (event) {
+                event.onComplete = function () {
+                    w2ui.layoutVehicul.resize();
+                    self.isDialog = false;
+                    $('#btnNewWindow').show();
+                    self.win = null;
+                };
+            });
+        },
+
+        gotofirst: function () {
+            var id = this.relatedVehicles[0];
+            app.module('appciv').router.navigate('appciv/detaliiVehiculIndividuale/' + id, true);
+        },
+
+        gotolast: function () {
+            var id = this.relatedVehicles[this.relatedVehicles.length - 1];
+            app.module('appciv').router.navigate('appciv/detaliiVehiculIndividuale/' + id, true);
+        },
+        gotonext: function () {
+            if (this.currentIndex < this.relatedVehicles.length) {
+                var id = this.relatedVehicles[this.currentIndex];
+                app.module('appciv').router.navigate('appciv/detaliiVehiculIndividuale/' + id, true);
+            }
+        },
+        gotoprev: function () {
+            if (this.currentIndex > 1) {
+                var id = this.relatedVehicles[this.currentIndex - 2];
+                app.module('appciv').router.navigate('appciv/detaliiVehiculIndividuale/' + id, true);
+            }
+        },
+
+        addFile: function () {
+            app.trigger('vehicul:add:file', {
+                id_vehicul: this.model.id
+            });
+        },
+
+        addMentiune: function () {
+            app.trigger('vehicul:add:mentiune', {
+                id_vehicul: this.model.id,
+                vin:this.model.get('vin')
+            });
+        },
+        anulare: function () {
+            var that = this;
+             w2confirm('Doriti anularea acestei inregistrari?').yes(function(){
+                that.model.set('stare', 1).set('nr_registru','');
+                that.save();
+                app.trigger('vehicul:set:editable');
+             });
+        },
+        unlock:function(){
+            var self = this;
+            w2confirm('Doriti deblocarea acestei inregistrari?').yes(function(){
+                 self.model.set('stare', 10).set('nr_registru','');
+                 self.save();
+                 app.trigger('vehicul:set:editable');
+            });
+        },
+        arhivare : function(){
+            vehicul.arhivareCIVIndividuale(this.model.get('id_comanda'),this.model.get('vin'));
+        },
+        transmite: function(){
+            this.model.set('stare', 10);
+            this.save();
+        },
+        validateWVTA:function(m){
+            // if(!this.model.get('id_wvta'))
+            //   return true;
+            var regex = /([a-z][0-9]{1,2}\*[0-9A-Z]*\/*[0-9]*\*[0-9]{4,5})$/;
+      
+             var match = regex.exec(m.get('wvta'));
+             if(!match){
+               $('#wvta').w2tag('Valoare incorecta!',{
+                     'class': 'w2ui-error'
+                 });
+                 $('.save-dosar').attr('disabled',true);
+                 return false;
+             }else{
+               $('#wvta').w2tag().removeClass('w2ui-error');
+               $('.save-dosar').attr('disabled',null);
+               var selected = $('#wvta').data('selected')
+               this.model.set('id_wvta',selected.id)
+               this.reset()
+               return true;
+             }
+        },
+        extensieChanged:function(d){
+            var selected = $('#extensie').data('selected')
+            this.model.set('id_extensie',selected.id)
+            $('#tip').w2field().reinit()
+            //this.reset()
+        },
+        motorChanged:function(){
+            var selected = $('#cod_motor').data('selected')
+            this.model.set('motor',selected.id)
+        },
+        prepareData:function(v){
+            var self = this
+            var selected = $('#versiune').data('selected')
+            this.model.set('id_tvv',selected.id)
+            if(!this.model.get('id_tvv') && (this.model.get('versiune') != selected.text)){
+                w2confirm('Nu exista Nr. Omologare Parinte pentru acest TVV! Adaugati cerere generare?')
+                .yes(function(){
+                    self.postCerereParinte.apply(self,arguments)
+                })
+                .no(function(){
+                    w2alert('Pentru a genera numar parinte va trebui sa reintroduceti datele!')
+                })
+            }
+        },
+
+        selectData:function(){
+            var selected = $('#versiune').data('selected')
+            this.model.set('id_tvv',selected.id)
+            // this.renderAnvelope()
+            // this.renderAtributes()
+            // this.renderMentiuni()
+        },
+
+        postCerereParinte:function(){
+            var self = this
+            $.ajax({
+                type:'POST',
+                url: root + 'individuale/createCerereParinte',
+                data: self.model.toJSON(),
+                success: function(response) {
+                    w2alert('Cererea a fost generata cu datele introduse! Dupa generarea numarului parinte va trebui sa completati vehiculul cu datele necesare!')
+                },
+                error:function(){
+                    
+                }
+            })
+        },
+
+        reload:function(){
+            console.log('reload')
+            var self = this;
+            var params = {
+                id_tvv: this.model.get('id_tvv'),
+                id_extensie: this.model.get('id_extensie'),
+                id: this.model.id && this.model.id !== 0 ? this.model.id : 0
+            };
+
+            $.ajax({
+                url: root + 'vehicule/getwvta',
+                data: {
+                    id_tvv: self.model.get('id_tvv')
+                },
+                success: function(response) {
+                    self.model.set('categorie', response.categ_euro);
+                    if (response.categ_euro.substr(0, 1) !== 'O' && response.categ_euro.substr(0, 1) !== 'R') {
+                            // $('#serie_motor').attr('disabled', null);
+                            // $('#motor').attr('disabled', null);
+                            $('#engine_container').show();
+                            $('#cod_motor').w2field().reinit();
+                            self.model.set('serie_motor', '').set('motor', '');
+                            if(response.categ_euro.split('|').length > 1){
+                                $('#categorie').w2field('list',{
+                                    items:response.categ_euro.split('|')
+                                });
+                                $('#categorie').show();
+                            }else{
+                                $('#categorie').hide();
+                            }
+                        } else {
+                            console.log("Remorca!!");
+                            // $('#serie_motor').attr('disabled', true);
+                            // $('#motor').attr('disabled', true);
+                            $('#engine_container').hide();
+                        }
+                    }
+                });
+            
+                self.model.get('Atribute').reset();
+                $.ajax({
+                    url: root + 'doiit/getatributetvv',
+                    data: params,
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function(response) {
+                        if(response.error !==''){
+                            w2alert(response.error);
+                        }
+                        if(response.atribute.length == 0){
+                            $('#date_tehnice_container').hide()
+                            self.model.get('Atribute').reset();
+                            return;
+                        }else{
+                            $('#date_tehnice_container').show()
+                        }
+                        app.trigger('wltp:changed',response.iswltp == 1);
+                        self.model.get('Atribute').reset(response.atribute);
+                        if (self.isNew) {
+                            self.renderatributes(response.iswltp);
+                        }
+                        self.model.set('nr_registru',response.nr_registru);
+                        // self.model.get('Mentiuni').reset(response.mentiuni);
+                        var added = [];
+                        
+                        response.mentiuni.split('\n').map(function(m,i){
+                            added.push({
+                                id:null,
+                                text:m,
+                                id_vehicul:self.model.id,
+                                nr_rand:i,
+                                nr_identif:self.model.get('vin')
+                            })
+                        });
+                        var currindex = added.length;
+                        self.existing.map(function(m){
+                            m.nr_rand = currindex;
+                            currindex ++;
+                        })
+                        var ment = added.concat(self.existing)
+                        self.model.get('Mentiuni').reset(ment);
+                        self.renderMentiuni();
+                    },
+                    error: function(response) {
+                        console.error(response);
+                    }
+                });
+                //reload anvelope
+                self.model.get('Anvelope').reset();
+                $.ajax({
+                    url: root + 'doiit/getanvelopetvv',
+                    data: params,
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function(response) {
+                        if(response.length == 0){
+                            $('#anvelope_container').hide()
+                            self.model.get('Anvelope').reset();
+                            return;
+                        }else{
+                            $('#anvelope_container').show()
+                        }
+                        vehicul.loadListeAnvelope(self.model, function() {
+                            self.model.get('Anvelope').reset(response);
+                            if (self.isNew) {
+                                self.renderanvelope();
+                            } else {
+                               app.module('appciv').trigger('anvelopeView:setSelect');
+                            }
+                            // self.renderanvelope();
+                        });
+                    },
+                    error: function(response) {
+                        console.error(response);
+                    }
+                });
+         },
+        
+        updateDateSupl: function() {
+            var self = this;
+            console.log(self.model)
+        },
+
+        reset:function(){
+            var self = this;
+            var props = ['an_fabr','motor','cod_motor','Atribute','Anvelope','nr_registru','putere_kw','cilindree','serie_motor'];
+            props.map(function(prop){
+                self.model.unset(prop)
+            })
+        }
+
+
+    });
+module.exports = EditView;
+},{"../../globals":24,"./../../templates/registru/cerereCOC.hbs":63}],114:[function(require,module,exports){
 var ipc = requireNode('ipc')
 
 module.exports = Marionette.ItemView.extend({
@@ -9886,7 +11400,11 @@ module.exports = Marionette.ItemView.extend({
             },
             onAdd:function(){},
             onEdit:function(data){
-                app.router.navigate('appciv/editCerereOmologare/'+data.recid,{trigger:true})
+                var method = "editCerereOmologare";
+                // if(data.get('tip_omologare') != "W" || data.get('tip_omologare') != "Y"){
+                //     method = "editCerereIndividuale"
+                // }
+                app.router.navigate('appciv/'+method+'/'+data.recid,{trigger:true})
             },
             onDelete:function(data){
                 console.log(data);
@@ -9898,7 +11416,7 @@ module.exports = Marionette.ItemView.extend({
                 {field:'tip', caption:'Tip', size:'20%'},
                 {field:'varianta', caption:'Varianta', size:'20%'},
                 {field:'versiune', caption:'Versiune', size:'20%'},
-                {field:'denumire_comerciala', caption:'Denumire', size:'20%'},
+                {field:'denumire', caption:'Denumire', size:'20%'},
                 {field:'nr_registru', caption:'Nr. Omologare', size:'20%'},
             ],
             parser: function(responseText) {
@@ -9917,7 +11435,7 @@ module.exports = Marionette.ItemView.extend({
         w2ui['gridCereriOmologare'].destroy()
     }
 });
-},{"./../../templates/registru/cereri.hbs":60}],104:[function(require,module,exports){
+},{"./../../templates/registru/cereri.hbs":64}],115:[function(require,module,exports){
 module.exports = Marionette.CompositeView.extend({
     className: 'form-inline mid-form',
     tagName: 'form',
@@ -9925,7 +11443,7 @@ module.exports = Marionette.CompositeView.extend({
         'click .btnAddValue': 'addValue',
         'click .btnDelValue': 'delValue'
     },
-    initialize: function () {
+    initialize: function (options) {
         // this.listenTo(app,'dt:add:value',this.addValue.bind(this));
         // this.listenTo(app,'dt:remove:value',this.delValue.bind(this));
         var self = this;
@@ -9945,6 +11463,7 @@ module.exports = Marionette.CompositeView.extend({
                 window.isDirty.dirty = false;
             }
         });
+        this.copil = options.copil
     },
     getTemplate: function () {
         var coll = this.collection,
@@ -9963,7 +11482,8 @@ module.exports = Marionette.CompositeView.extend({
         model.set('iswltp', this.iswltp);
         return {
             type: this.options.type,
-            index: model.cid
+            index: model.cid,
+            copil:this.copil
         };
     },
     setReadOnly: function () {
@@ -10145,7 +11665,7 @@ module.exports = Marionette.CompositeView.extend({
     }
 });
 
-},{"./mase":108}],105:[function(require,module,exports){
+},{"./mase":119}],116:[function(require,module,exports){
 module.exports = Marionette.ItemView.extend({
     template: require('./../../templates/registru/detaliiMotor.hbs'),
     className: 'fullPage',
@@ -10194,11 +11714,12 @@ module.exports = Marionette.ItemView.extend({
     }
 });
 
-},{"./../../templates/registru/detaliiMotor.hbs":61}],106:[function(require,module,exports){
+},{"./../../templates/registru/detaliiMotor.hbs":65}],117:[function(require,module,exports){
 module.exports = Marionette.FormView.extend({
     template: require('./../../templates/registru/general.hbs'),
     initialize: function() {
         var self = this;
+        console.log('general view show')
         // this.model.on('change', function() {
         //     self.confirmReset.apply(self, arguments);
         // });
@@ -10246,9 +11767,10 @@ module.exports = Marionette.FormView.extend({
     },
     onShow:function(){
         var self = this;
+        console.log('general view show')
         //this.$el.find('input').on('change',function(){self.confirmReset.apply(self,arguments);});
         this.setupView();
-        $('#producator').w2field('combo',{
+        this.$el.find('#producator').w2field('combo',{
             url:app.dotUrl + '/nrom/getProducatori',
             minLength: 1,
             selected: {
@@ -10333,7 +11855,7 @@ module.exports = Marionette.FormView.extend({
     }
 });
 
-},{"./../../templates/registru/general.hbs":62}],107:[function(require,module,exports){
+},{"./../../templates/registru/general.hbs":66}],118:[function(require,module,exports){
 var Globals = require('./../../globals');
 var ipc = requireNode('ipc');
 module.exports = Marionette.LayoutView.extend({
@@ -10346,6 +11868,7 @@ module.exports = Marionette.LayoutView.extend({
     },
     initialize: function(options) {
         this.id_cerere = options.id;
+        this.tip_omolo = options.tip
     },
 
     onShow: function(){
@@ -10370,21 +11893,29 @@ module.exports = Marionette.LayoutView.extend({
                         // { type: 'button',  id: 'item5',  caption: 'Item 5', icon: 'w2ui-icon-check', hint: 'Hint for item 5' }
                     ],
                     onClick: function (event) {
-                        w2ui['nrRegLayout'].toggle('preview')
+                        var SearchFormView = require('./searchView');
+                        //var searchForm = new SearchFormView({tip_omologare:'coc'});
+                        app.modal.show(new SearchFormView(), {
+                              preventDestroy: true
+                        });
+                        // w2ui['nrRegLayout'].toggle('preview')
                     }
                 }},
                 { type: 'main', style: pstyle, content: '<div id="workRegion" class="page">Work area</div>', title:'Zona Lucru' },
-                { type: 'preview', size: '50%', resizable: true, hidden: false, style: pstyle, content: '<div id="resourceRegion" class="page">Resource Area</div>', title:'Zona date WVTA' },
+                // { type: 'preview', size: '50%', resizable: true, hidden: false, style: pstyle, content: '<div id="resourceRegion" class="page">Resource Area</div>', title:'Zona date WVTA' },
             ]
         })
         this.addRegions({
             work: '#workRegion',
-            resource: '#resourceRegion'
+            // resource: '#resourceRegion'
         });
         var TVVFormView = require('./tvvform');
-        var tvvform = new TVVFormView({id_cerere : this.id_cerere});
+        var tvvform = new TVVFormView({id_cerere : this.id_cerere, tip_omol:this.options.tip});
+        // var SearchFormView = require('./searchView');
+        // var searchForm = new SearchFormView({tip_omologare:'coc'});
         this.work.show(tvvform)
-        w2ui['nrRegLayout'].toggle('preview')
+        // this.resource.show(searchForm)
+        // w2ui['nrRegLayout'].toggle('preview')
     },
 
     onBeforeDestroy: function() {
@@ -10393,7 +11924,7 @@ module.exports = Marionette.LayoutView.extend({
 
 });
 
-},{"./../../globals":24,"./../../templates/registru/index.hbs":63,"./tvvform":113}],108:[function(require,module,exports){
+},{"./../../globals":24,"./../../templates/registru/index.hbs":67,"./searchView":125,"./tvvform":128}],119:[function(require,module,exports){
 module.exports = Marionette.FormView.extend({
     initialize: function() {},
     bindings: {
@@ -10416,9 +11947,12 @@ module.exports = Marionette.FormView.extend({
     getTemplate: function() {
         switch (this.model.get('tip')) {
             case 'interval':
+                if(this.options.copil){
+                    return require('./../../templates/registru/liber.hbs');
+                }
                 return require('./../../templates/registru/interval.hbs');
             case 'lista':
-                this.source = JSON.parse(this.model.get('sursa'));
+                this.source = this.model.get('sursa')?JSON.parse(this.model.get('sursa')):null;
                 return require('./../../templates/registru/lista.hbs');
             case 'liber':
                 return require('./../../templates/registru/liber.hbs');
@@ -10444,6 +11978,10 @@ module.exports = Marionette.FormView.extend({
     },
     onRender: function() {
         // this.ensureElement();
+        // if(this.options.copil){
+        //     this.stickit();
+        //     return;
+        // }
         var self = this;
         if (this.model.get('tip') === 'lista' && this.model.get('multiple') !== 1) {
             this.$el.find('[name="val"]').w2field('list', {
@@ -10528,7 +12066,7 @@ module.exports = Marionette.FormView.extend({
 
 });
 
-},{"./../../templates/registru/interval.hbs":64,"./../../templates/registru/liber.hbs":65,"./../../templates/registru/lista.hbs":66,"./../../templates/registru/memo.hbs":67,"./../../templates/registru/tag.hbs":72}],109:[function(require,module,exports){
+},{"./../../templates/registru/interval.hbs":68,"./../../templates/registru/liber.hbs":69,"./../../templates/registru/lista.hbs":70,"./../../templates/registru/memo.hbs":71,"./../../templates/registru/tag.hbs":80}],120:[function(require,module,exports){
 module.exports = Marionette.ItemView.extend({
     template: require('./../../templates/registru/mentiune.hbs'),
     bindings: {
@@ -10552,7 +12090,7 @@ module.exports = Marionette.ItemView.extend({
     }
 });
 
-},{"./../../templates/registru/mentiune.hbs":68}],110:[function(require,module,exports){
+},{"./../../templates/registru/mentiune.hbs":72}],121:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = Marionette.CompositeView.extend({
     template: require('./../../templates/registru/mentiuni.hbs'),
@@ -10696,23 +12234,25 @@ module.exports = Marionette.CompositeView.extend({
     },
 });
 
-},{"./../../models/registru/mentiune":34,"./../../templates/registru/mentiuni.hbs":69,"./mentiune":109}],111:[function(require,module,exports){
+},{"./../../models/registru/mentiune":34,"./../../templates/registru/mentiuni.hbs":73,"./mentiune":120}],122:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = Marionette.ItemView.extend({
     className: 'fullscreen',
     template: require('./../../templates/registru/motoare.hbs'),
     initialize: function() {
         this.setPagePermissions();
+        this.gridName = this.options.gridName?this.options.gridName:'gridMotoare'
+        this.sourceGridName = this.options.sourceGridName?this.options.sourceGridName:'gridSursa'
         //this.collection.setGridName('gridMotoare');
     },
     refreshUI: function() {
         // if (!this.isrendered) {
-        if (w2ui.hasOwnProperty('gridMotoare')){
-            w2ui.gridMotoare.records = this.collection.toJSON();
-            w2ui.gridMotoare.refreshFull();
+        if (w2ui.hasOwnProperty(this.gridName)){
+            w2ui[this.gridName].records = this.collection.toJSON();
+            w2ui[this.gridName].refreshFull();
         }
-        if (w2ui.hasOwnProperty('gridSursa'))
-            w2ui.gridSursa.refreshFull();
+        if (w2ui.hasOwnProperty(this.sourceGridName))
+            w2ui[this.sourceGridName].refreshFull();
         this.isrendered = true;
         // }
     },
@@ -10728,7 +12268,7 @@ module.exports = Marionette.ItemView.extend({
         console.log('render motor');
         var self = this;
         this.$el.find('#gridMotoare').w2grid({
-            name: 'gridMotoare',
+            name: self.gridName,
             show: {
                 toolbar: true,
                 toolbarDelete: self.allowEdit
@@ -10805,7 +12345,7 @@ module.exports = Marionette.ItemView.extend({
     renderSursa: function() {
         var me = this;
         this.$el.find('#gridSursa').w2grid({
-            name: 'gridSursa',
+            name: me.sourceGridName,
             recid: 'ndelcodmot',
             show: {
                 toolbar: true
@@ -10882,7 +12422,7 @@ module.exports = Marionette.ItemView.extend({
                     text: 'Transfera selectia',
                     icon: 'w2ui-icon-upload',
                     onClick: function() {
-                        var grid = w2ui.gridSursa;
+                        var grid = w2ui[me.sourceGridName];
                         for (var i in grid.getSelection()) {
                             var id = grid.getSelection()[i];
                             var motor = grid.get(id);
@@ -10903,7 +12443,7 @@ module.exports = Marionette.ItemView.extend({
                                     cilindree: motor.cilindree
                                 });
                                 me.collection.add(mdl);
-                                w2ui.gridMotoare.add(mdl.toJSON())
+                                w2ui[me.gridName].add(mdl.toJSON())
                             }
                         }
                         grid.refresh();
@@ -10921,14 +12461,749 @@ module.exports = Marionette.ItemView.extend({
 
     },
     onBeforeDestroy: function() {
-        if (w2ui.hasOwnProperty('gridMotoare'))
-            w2ui.gridMotoare.destroy();
-        if (w2ui.hasOwnProperty('gridSursa'))
-            w2ui.gridSursa.destroy();
+        if (w2ui.hasOwnProperty(this.gridName))
+            w2ui[this.gridName].destroy();
+        if (w2ui.hasOwnProperty(this.sourceGridName))
+            w2ui[this.sourceGridName].destroy();
     },
 });
 
-},{"./../../models/registru/motor":35,"./../../templates/registru/motoare.hbs":70,"./detaliiMotor":105}],112:[function(require,module,exports){
+},{"./../../models/registru/motor":35,"./../../templates/registru/motoare.hbs":74,"./detaliiMotor":116}],123:[function(require,module,exports){
+var ItemView = Marionette.ItemView.extend({
+  className: 'flexSearch',
+  attributes: function () {
+    return {
+      style: 'display:flex;margin:5px'
+    };
+  },
+  events: {
+    'click #delFilter': 'deleteFilter'
+  },
+  bindings: {
+    '#field': 'field',
+    '#oper': 'oper',
+    '#value': 'value'
+  },
+  getTemplate: function () {
+    return '<div>' +
+      '<div class="">' +
+      '<div><input type="text" id="field"></div>' +
+      '</div>' +
+      '<div class="">' +
+      '<div><input type="text" id="oper"></div>' +
+      '</div>' +
+      '<div class="">' +
+      '<div><input type="text" id="value"></div>' +
+      '</div>' +
+      '<div><button class="btn btn-red btn-icon-only" id="delFilter"><i class="w2ui-icon-cross"></i></button></div>' +
+      '</div>';
+  },
+  initialize: function (options) {
+    this.sourceFields = [
+      { text: 'Nr. Registru', id: 'nr_registr' },
+      { text: 'WVTA', id: 'wvta' },
+      { text: 'Extensie', id: 'extensie' },
+      { text: 'Categorie EU', id: 'categ_euro' },
+      { text: 'Categorie folosinta', id: 'cat' },
+      { text: 'Caroserie', id: 'scat' },
+      { text: 'Tip', id: 'tip' },
+      { text: 'Varianta', id: 'varianta' },
+      { text: 'Versiune', id: 'versiune' },
+      { text: 'Marca', id: 'marca' },
+      { text: 'Den. Comerciala', id: 'tipcom' },
+      { text: 'Cod Motor', id: 'cod' },
+      { text: 'Cilindree', id: 'cilindree' },
+      { text: 'Putere max. Kw', id: 'p_max_kw' },
+      { text: 'Combustibil', id: 'combustib' },
+      { text: 'Masa proprie', id: 'masa' },
+      // { text: 'Masa Reala', id: 'masa_reala' },
+      // { text: 'Masa Totala', id: 'masa_totala' },
+      { text: 'Lungime', id: 'lungmax' },
+      { text: 'Latime', id: 'latmax' },
+      { text: 'Inaltime', id: 'hmax' },
+      { text: 'An fabricatie', id: 'an_fabr' },
+      { text: 'Locuri fata', id: 'locurif' },
+      { text: 'Locuri scaune', id: 'locurisc' },
+      { text: 'Locuri total', id: 'locuri' },
+      { text: 'Locuri picioare', id: 'locuripi' },
+      { text: 'Masa axa fata', id: 'masf' },
+      { text: 'Masa axa spate', id: 'mass' },
+      { text: 'Masa rem cu disp', id: 'masrec' },
+      { text: 'Masa rem fara disp', id: 'masrecf' },
+      { text: 'Masa rem fara disp', id: 'masrecf' },
+      { text: 'Anvel. standard fata', id: 'anvelopa' },
+      { text: 'Anvel. standard spate', id: 'roatas' },
+      { text: 'Viteza max', id: 'vitezamax' },
+      { text: 'Numar axe', id: 'nr_axe' }
+    ]
+    this.operators = [
+      '=',
+      '<>',
+      '>',
+      '<',
+      '<=',
+      '>=',
+      'contine'
+    ]
+  },
+  onShow: function () {
+    var self = this
+    this.$('#field').w2field('list', { items: this.sourceFields }).on('change', function (event) {
+      var selected = $(this).data('selected')
+      self.model.set('field', selected.id)
+    });
+    this.$('#oper').w2field('list', { items: this.operators });
+    this.stickit()
+  },
+  deleteFilter: function () {
+    this.trigger('delFilter', this.model)
+  }
+})
+var FieldModel = Backbone.Model.extend({
+
+})
+var FieldCollection = Backbone.Collection.extend({
+  model: FieldModel
+})
+
+
+/****************************
+ * 
+ * Collection View
+ * 
+ */
+module.exports = Marionette.CompositeView.extend({
+  expandedGrid: '',
+  template: require('./../../templates/registru/searchForm.hbs'),
+  initialize: function (options) {
+    var self = this;
+    this.tip_omologare = options.tip_omologare;
+    this.searchFields = []
+
+    this.collection = new FieldCollection()
+    this.listenTo(app,'search:request', this.showNavigation.bind(this));
+    // this.listenTo(app, 'search:toggleNav', this.toggleNavigation.bind(this));
+    // this.listenTo(app, 'search:toggleCopy', this.toggleCopy.bind(this));
+  },
+
+  attributes: function () {
+    return {
+      style: 'height:100%'
+    };
+  },
+  childView: ItemView,
+  onShow:function(){
+    this.toggleCopy({enable:false})
+    this.toggleNavigation({prev:false,next:false})
+  },
+  events: {
+    'click #addfield': 'addField',
+    'click #searchBtn': 'search',
+    'click #closeBtn' : 'close',
+    'click #nextBtn':'nextRec',
+    'click #prevBtn': 'prevRec',
+    'click #copyBtn' : 'copyData'
+  },
+  attachHtml: function (collectionView, itemView, index) {
+    var self = this
+    collectionView.$('#searchFields').append(itemView.el) 
+    itemView.on('delFilter', function (filter) {
+      self.collection.remove(filter)
+    })
+  },
+  addField: function () {
+    this.collection.add(new FieldModel({ 'field': '', 'oper': '', 'value': '' }))
+  },
+  search: function() {
+    console.log('search button press')
+    var filters = this.collection.toJSON()
+    app.trigger('search:performSearch',filters)
+  },
+  close:function() {
+    app.trigger('search:close');
+  },
+  showNavigation:function(data){
+    this.$el.find('#crtPage').html(data.page+1)
+    this.$el.find('#totalRecords').html(data.total)
+    if(data.page >= data.total){
+      this.toggleNavigation({prev:true,next:false})
+    }else if(data.page == 0){
+      this.toggleNavigation({prev:false,next:true})
+    }else{
+      this.toggleNavigation({prev:true,next:true})
+    }
+    if(data.total > 0){
+      this.toggleCopy({enable:true});
+    }
+  },
+  nextRec: function(){
+    app.trigger('search:next');
+  },
+  prevRec: function(){
+    app.trigger('search:prev');
+  },
+  copyData:function(){
+    app.trigger('search:copydata')
+  },
+  toggleCopy:function(data){
+    if(data.enable){
+      this.$el.find('#copyBtn').prop('disabled',false);
+    }else{
+      this.$el.find('#copyBtn').prop('disabled',true);
+    }
+  },
+  toggleNavigation:function(data){
+    if(data.prev){
+      this.$el.find('#prevBtn').prop('disabled',false);
+    }else{
+      this.$el.find('#prevBtn').prop('disabled',true);
+    }
+    if(data.next){
+      this.$el.find('#nextBtn').prop('disabled',false);
+    }else{
+      this.$el.find('#nextBtn').prop('disabled',true);
+    }
+  }
+})
+},{"./../../templates/registru/searchForm.hbs":75}],124:[function(require,module,exports){
+var ModelDef = require('./../../models/registru/tvvsextensie')
+var Globals = require('./../../globals')
+
+module.exports = Marionette.LayoutView.extend({
+  initialize: function (options) {
+    this.filter = options.filter;
+    this.page = 0;
+    this.totalRecords = 100;
+    this.formID = "searchFormResults";
+    this.arraydata = []
+    // this.buildSubViews()
+  },
+  template: require('./../../templates/registru/searchResults.hbs'),
+  onShow: function () {
+    // this.$el.css({
+    //   'opacity': 0
+    // });
+    // this.open();
+    // // this.setButtons();
+    this.listenTo(app,'search:performSearch', this.searchRequested.bind(this))
+    this.listenTo(app,'search:next', this.nextRecord.bind(this))
+    this.listenTo(app,'search:prev', this.previousRecord.bind(this))
+    this.listenTo(app,'search:copydata', this.copyData.bind(this))
+    // self.setButtons();
+    // self.attachActions();
+  },
+  open: function () {
+    var self = this;
+    this.win = self.$el.w2panel({
+      name: 'searchResultsForm',
+      title: w2utils.lang('Date TVV'),
+      width: '1000px',
+      showMin: true,
+      showMax: true,
+      height: '650px',
+      resizable: true,
+      //toolbarButtons:[{id:'unlock',className:'w2ui-icon-lock',click:self.unlockButtons.bind(self)}],
+      onOpen: function (event) {
+        event.onComplete = function () {
+          // self.buildView();
+          // self.setButtons();
+          self.attachActions();
+          //self.requestData();
+          // self.win.buttons = $('#formButtons').html();
+        };
+      },
+      onClose: function (event) {
+        w2ui[self.formID].destroy()
+        self.destroy();
+      },
+      buttons: self.getButtonsHtml()
+    });
+  },
+  getButtonsHtml: function () {
+    return '<div id="formButtons">' +
+      '<span id="navInfo">Rezultat <span id="pageNr"></span> din <span id="totRec"></span></span>'+
+      '<span id="navButtons">' +
+      '<button class="btn btn-default" id="btnPrev">Anterior</button>' +
+      '<button class="btn btn-default" id="btnNext">Urmator</button>' +
+      '</span>' +
+      '<button class="btn btn-green" id="btnFisa"><i class="w2ui-icon-print"></i> Fisa</button>' +
+      '<button class="btn btn-red" id="btnClose"><i class="w2ui-icon-cross"></i> Inchide</button>' +
+      '<button class="btn btn-orange" id="btnCopy"><i class="w2ui-icon-copy"></i> Copy</button>' +
+      '</div>';
+  },
+  attachActions: function () {
+    var self = this;
+    var box = $('#searchResultsFormw2ui-window');
+    box.find('#btnPrev').on('click', self.previousRecord.bind(self));
+    box.find('#btnClose').on('click', self.close.bind(self));
+    box.find('#btnNext').on('click', self.nextRecord.bind(self));
+    box.find('#btnFisa').on('click', self.fisa.bind(self));
+    box.find('#btnCopy').on('click', self.copy.bind(self));
+  },
+  events: {},
+  previousRecord: function () {
+    if (this.page > 0) {
+      this.page -= 1
+      this.model = new ModelDef(this.arraydata[this.page]);
+      if(!this.viewRendered)
+          this.buildSubViews()
+        else
+          this.refreshSubViews()
+      app.trigger('search:request',{page:this.page,total:this.totalRecords})
+    }
+  },
+
+  nextRecord: function () {
+    if (this.page < this.totalRecords - 1) {
+      this.page += 1
+      if(this.arraydata.length >= this.page){
+      //this.requestData();
+      this.model = new ModelDef(this.arraydata[this.page]);
+      if(!this.viewRendered)
+          this.buildSubViews()
+        else
+          this.refreshSubViews()
+      app.trigger('search:request',{page:this.page,total:this.totalRecords})
+      }else{
+        this.requestData()
+      }
+    }
+  },
+
+  close: function () {
+    this.win.close();
+  }, 
+
+  copy: function () {
+    console.log(this.filter, this.page)
+  },
+
+  fisa: function () { },
+  searchRequested:function(filter){
+    this.page = 0;
+    this.arraydata = [];
+    this.totalRecords = 0;
+    this.filter = filter
+    this.requestData();
+  },
+  requestData: function () {
+    w2utils.lock('#searchResultForm', 'Searching...', true);
+    var self = this;
+    var data = {
+      page: this.page,
+      filter: this.filter
+    }
+    $.ajax({
+      type: 'POST',
+      dataType: 'json',
+      contentType: 'application/json',
+      url: app.baseUrl + 'doiit/getSearchData',
+      data: JSON.stringify(data),
+      success: function (response) {
+        self.arraydata = self.arraydata.concat(response.tvvext);
+        self.model = new ModelDef(response.tvvext[0]);
+        self.totalRecords = response.total
+        self.showInfo();
+        app.trigger('search:request',{page:self.page,total:self.totalRecords})
+        if(!self.viewRendered)
+          self.buildSubViews()
+        else
+          self.refreshSubViews()
+        w2utils.unlock('#searchResultForm');
+      },
+      error: function (response) {
+        w2alert(response.ExceptionMessage)
+        w2utils.unlock('#searchResultForm');
+      }
+    })
+  },
+  showInfo: function(){
+    var self = this
+    $('#pageNr').html(self.page+1)
+    $('#totRec').html(self.totalRecords)
+  },
+  buildSubViews: function () {
+    var GView = require('./general');
+    this.GeneralView = new GView({
+      model: this.model.get('TVV'),
+      extensie: this.model.get('id_extensie')
+    });
+    var MView = require('./dateTehnice');
+        this.MaseView = new MView({
+            type: 'mase',
+            collection: this.model.get('SetDateTVV').get('DateTehnice'), //.byGroup('mase')
+            copil:true
+        });
+        var PView = require('./dateTehnice');
+        this.PoluareView = new PView({
+            type: 'poluare',
+            iswltp: this.model.get('SetDateTVV').get('iswltp'),
+            collection: this.model.get('SetDateTVV').get('DateTehnice'), //.byGroup('poluare')
+            copil:true
+        });
+        this.listenTo(app, 'wltp:changed', function (val) {
+            if (val) this.model.get('SetDateTVV').set('iswltp', 1);
+            else this.model.get('SetDateTVV').set('iswltp', 0);
+        });
+        var DView = require('./dateTehnice');
+        this.DimensiuniView = new DView({
+            type: 'dimensiuni',
+            collection: this.model.get('SetDateTVV').get('DateTehnice'), //.byGroup('dimensiuni')
+            copil:true
+            //collection : _.filter(this.model.get('SetDateTVV').get('DateTehnice').models,function(m){return m.get('grupa') === 'dimensiuni'})
+        });
+        var AxView = require('./dateTehnice');
+        this.AxeView = new AxView({
+            type: 'axe',
+            collection: this.model.get('SetDateTVV').get('DateTehnice'), //.byGroup('axe')
+            copil:true
+        });
+        var AlView = require('./dateTehnice');
+        this.AlteView = new AlView({
+            type: 'altele',
+            collection: this.model.get('SetDateTVV').get('DateTehnice'), //.byGroup('altele')
+            copil:true
+        });
+
+        var AnView = require('./anvelope');
+        this.AnvelopeView = new AnView({
+            collection: this.model.get('SetDateTVV').get('Anvelope'),
+            gridName:"searchAnvelopeGrid",
+        });
+        var TView = require('./dateTehnice');
+        this.TransmisieView = new TView({
+            type: 'cv',
+            collection: this.model.get('SetDateTVV').get('DateTehnice'), //.byGroup('cv')
+            copil:true
+        });
+        var MView = require('./motoare');
+        this.MotoareView = new MView({
+            collection: this.model.get('SetDateTVV').get('Motoare'),
+            gridName:"searchMotoareGrid",
+            sourceGridName:"searchMotoareSourceGrid"
+        });
+        // var SView = require('./sisteme');
+        // this.SistemeView = new SView({
+        //     collection: this.model.get('SetDateTVV').get('Sisteme'),
+        //     categorie: this.model.get('TVV').get('categorie'),
+        //     isnew: this.model.get('TVV').isNew()
+        // });
+        // var MnView = require('./mentiuni');
+        // this.MentiuniView = new MnView({
+        //     collection: this.model.get('SetDateTVV').get('Mentiuni')
+        // });
+    this.buildView();
+  },
+  buildView: function () {
+    var tabs;
+    var hideTab = this.model.get('SetDateTVV').get('DateTehnice').models.length === 0 || this.options.tip_completare === 1;
+    tabs = [{
+      id: 'tabTVV',
+      caption: 'Date generale',
+      hint: 'GeneralView',
+      index: 1
+    }, {
+      id: 'tabMase',
+      caption: 'Mase',
+      hint: 'MaseView',
+      index: 3,
+      hidden: hideTab
+    }, {
+      id: 'tabDimensiuni',
+      caption: 'Dimensiuni',
+      hint: 'DimensiuniView',
+      index: 2,
+      hidden: hideTab
+    }, {
+      id: 'tabAxe',
+      caption: 'Axe',
+      hint: 'AxeView',
+      index: 7,
+      hidden: hideTab
+    }, {
+      id: 'tabAltele',
+      caption: 'Alte Date',
+      hint: 'AlteView',
+      index: 9,
+      hidden: hideTab
+    }, {
+      id: 'tabAnvelope',
+      caption: 'Anvelope',
+      hint: 'AnvelopeView',
+      index: 8,
+      hidden: hideTab
+    }, {
+      id: 'tabTransmisie',
+      caption: 'Transmisie',
+      hint: 'TransmisieView',
+      index: 6,
+      hidden: hideTab
+    }, {
+      id: 'tabMotor',
+      caption: 'Motor',
+      hint: 'MotoareView',
+      index: 4,
+      hidden: hideTab
+    }, {
+      id: 'tabPoluare',
+      caption: 'Poluare',
+      hint: 'PoluareView',
+      index: 5,
+      hidden: hideTab
+    }, {
+      id: 'tabComponente',
+      caption: 'Componente/Sisteme',
+      hint: 'SistemeView',
+      index: 10,
+      hidden: hideTab
+    }, {
+      id: 'tabMentiuni',
+      caption: 'Mentiuni',
+      hint: 'MentiuniView',
+      index: 11,
+      hidden: hideTab
+    }];
+
+
+    //setam ordinea de afisare a taburilor
+    tabs = _.sortBy(tabs, 'index');
+    var me = this;
+    //construim forma
+    this.$el.find('#searchResultData').w2form({
+      name: me.formID,
+      tabs: tabs,
+      focus: 1000
+    });
+    w2ui[me.formID].tabs.onClick = this.tabClicked.bind(this);
+    this.setRegions();
+    // this.GeneralView.setupView();
+    if (this.model.get('TVV').get('nr_registru'))
+      this.GeneralView.setReadOnly();
+    this.$el.css({
+      'opacity': 1
+    });
+    this.viewRendered = true;
+  },
+  refreshSubViews:function(data){
+    var self = this;
+    var GView = require('./general');
+    this.GeneralView = new GView({
+      model: this.model.get('TVV'),
+      extensie: this.model.get('id_extensie')
+    });
+    this.dategenerale.show(this.GeneralView);
+    self.MaseView.collection = self.model.get('SetDateTVV').get('DateTehnice');//.byGroup('mase');
+    self.MaseView.render();
+    // self.MaseView.attachChangeEvent();
+    self.DimensiuniView.collection = self.model.get('SetDateTVV').get('DateTehnice');//.byGroup('dimensiuni');
+    self.DimensiuniView.render();
+    self.AxeView.collection = self.model.get('SetDateTVV').get('DateTehnice');//.byGroup('axe');
+    self.AxeView.render();
+    self.AlteView.collection = self.model.get('SetDateTVV').get('DateTehnice');//.byGroup('altele');
+    self.AlteView.render();
+    self.PoluareView.collection = self.model.get('SetDateTVV').get('DateTehnice');//.byGroup('poluare');
+    self.PoluareView.render();
+    self.TransmisieView.collection = self.model.get('SetDateTVV').get('DateTehnice');//.byGroup('cv');
+    self.TransmisieView.render();
+    // self.SistemeView.collection = self.model.get('SetDateTVV').get('Sisteme');
+    // self.SistemeView.options.categorie = self.model.get('TVV').get('categorie'),
+    // self.SistemeView.refreshUI();
+    // self.MentiuniView.collection = self.model.get('SetDateTVV').get('Mentiuni');
+    // self.MentiuniView.refreshUI();
+    self.MotoareView.collection = self.model.get('SetDateTVV').get('Motoare');
+    self.MotoareView.refreshUI();
+    self.AnvelopeView.collection = self.model.get('SetDateTVV').get('Anvelope');
+    self.AnvelopeView.refreshUI();
+  },
+  setRegions: function () {
+    this.addRegions({
+      'dategenerale': '#search_tabTVV',
+      'dimensiuni': '#search_tabDimensiuni',
+      'mase': '#search_tabMase',
+      'axe': '#search_tabAxe',
+      'altele': '#search_tabAltele',
+      'transmisie': '#search_tabTransmisie',
+      'motor': '#search_tabMotor',
+      'poluare': '#search_tabPoluare',
+      'anvelope': '#search_tabAnvelope',
+      'sisteme': '#search_tabSisteme',
+      'mentiuni': '#search_tabMentiuni',
+    });
+    this.dategenerale.show(this.GeneralView);
+    this.dimensiuni.show(this.DimensiuniView);
+    this.mase.show(this.MaseView);
+    this.axe.show(this.AxeView); 
+    this.motor.show(this.MotoareView);
+    this.altele.show(this.AlteView);
+    this.transmisie.show(this.TransmisieView);
+    this.poluare.show(this.PoluareView);
+    this.anvelope.show(this.AnvelopeView);
+    // this.sisteme.show(this.SistemeView);
+    // this.mentiuni.show(this.MentiuniView);
+  },
+  tabClicked: function (tab) {
+    var me = this;
+    if (me[tab.tab.hint].refreshUI)
+      me[tab.tab.hint].refreshUI.apply(me[tab.tab.hint], arguments);
+    if (me.forceValidation)
+      w2utils.validate(me.model, me.$el);
+  },
+
+  copyData:function(){
+    // var copyModel = this.model.toJSON();
+    Globals.setClipboard(this.model.get('SetDateTVV'));
+    app.trigger('globals:copy')
+  },
+  onBeforeDestroy:function() {
+    if(w2ui.hasOwnProperty(this.formID))
+      w2ui[this.formID].destroy();
+  }
+})
+},{"./../../globals":24,"./../../models/registru/tvvsextensie":39,"./../../templates/registru/searchResults.hbs":76,"./anvelope":109,"./dateTehnice":115,"./general":117,"./motoare":122}],125:[function(require,module,exports){
+module.exports = Marionette.LayoutView.extend({
+  template: require('./../../templates/registru/searchView.hbs'),
+  initialize: function(options) {
+
+  },
+  onShow: function() {
+    this.$el.css({
+      'opacity': 1,
+      'height':'100%'
+    });
+    this.open();
+    // this.setButtons();
+  },
+
+  open: function() {
+    var self = this;
+    this.win = self.$el.w2panel({
+      name: 'searchFormWindow',
+      title: w2utils.lang('Cautare Nr. Omologare'),
+      width: '1200px',
+      showMin: true,
+      showMax: true,
+      height: '800px',
+      resizable: true,
+      //toolbarButtons:[{id:'unlock',className:'w2ui-icon-lock',click:self.unlockButtons.bind(self)}],
+      onOpen: function (event) {
+        event.onComplete = function () {
+          self.buildLayout();
+          self.attachEvents();
+        };
+      },
+      onClose: function (event) {
+        w2ui.searchViewLayout.destroy();
+        self.destroy();
+      },
+    });
+  },
+
+  buildLayout: function() {
+    var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
+        this.$el.w2layout({
+            name:'searchViewLayout',
+            panels:[
+                { type: 'main', style: pstyle, content: '<div id="searchResults" class="page"></div>', title:'Rezultate cautare' },
+                { type: 'preview', size: '30%', resizable: false, hidden: false, style: pstyle, content: '<div id="searchForm" class="page"></div>', title:'Criterii cautare' },
+            ]
+        })
+        this.addRegions({
+            results: '#searchResults',
+            form: '#searchForm'
+        });
+        var SearchResults = require('./searchResults')
+        var SearchForm = require('./searchForm')
+        var sres = new SearchResults(); 
+        var searchForm = new SearchForm({tip_omologare:'coc'});
+        this.results.show(sres);
+        this.form.show(searchForm);
+  },
+
+  attachEvents:function() {
+    this.listenTo(app, 'search:close', this.win.close);
+  },
+
+})
+},{"./../../templates/registru/searchView.hbs":77,"./searchForm":123,"./searchResults":124}],126:[function(require,module,exports){
+module.exports = Marionette.LayoutView.extend({
+  initialize:function() {},
+  template:require('./../../templates/registru/selectieCerere.hbs'),
+  onShow: function() {
+    this.open();
+  },
+  open: function() {
+    var self = this;
+    this.win = self.$el.w2panel({
+      name: 'selectieCererePanel',
+      title: w2utils.lang('Cerere Nr. Omologare'),
+      width: '600px',
+      showMin: false,
+      showMax: false,
+      height: '400px',
+      resizable: false,
+      //toolbarButtons:[{id:'unlock',className:'w2ui-icon-lock',click:self.unlockButtons.bind(self)}],
+      onOpen: function (event) {
+        event.onComplete = function () {
+          self.buildView();
+          self.attachEvents();
+        };
+      },
+      onClose: function (event) {
+        // w2ui.searchViewLayout.destroy();
+        self.destroy();
+      },
+      buttons:self.getButtonsHtml()
+    });
+  },
+  getButtonsHtml: function () {
+    return '<div id="formButtons">' +
+      '<button class="btn btn-green" id="btnSave"><i class="w2ui-icon-save"></i> Salveaza</button>' +
+      '<button class="btn btn-red" id="btnClose"><i class="w2ui-icon-cross"></i> Inchide</button>' +
+      '</div>';
+  },
+  buildView: function() {
+    var box = this.$el.find('#selectForm');   
+    box.find('#tip_cerere').w2field('list',{
+      items:[
+        { id: 'W', text: 'INREGISTRARE DE TIP' },
+        { id: 'Y', text: 'INREGISTRARE DE TIP (TIP NOU)' },
+        { id: '1', text: 'ATESTAT TEHNIC (TIP NOU)'},
+        { id: '4', text: ' '},
+        { id: '5', text: ' '},
+        { id: '6', text: 'CONSTATARE TEHNICA'},
+        { id: '7', text: 'VERIFICARE TEHNICA'},
+        { id: 'B', text: 'OMOLOGARE ARTIZANALA'},
+        { id: 'C', text: 'OMOLOGARE CU COC'},
+        { id: 'D', text: 'OMOLOGARE SCHIMBARE CAROSERIE'},
+        { id: 'E', text: 'OMOLOGARE CU COC (TIP NOU)'},
+        { id: 'G', text: 'OMOLOGARE FARA COC (TIP NOU)'},
+        { id: 'H', text: 'OMOLOGARE SCHIMBARE CAROSERIE (TIP NOU)'},
+        { id: 'J', text: 'OMOLOGARE FARA COC'},
+        { id: 'K', text: 'OMOLOGARE ARTIZANALA (TIP NOU)'},
+        { id: 'N', text: 'OMOLOGARE SCHIMBARE MOTOR'},
+        { id: 'P', text: 'OMOLOGARE MULTIETAPA (TIP NOU)'},
+        { id: 'R', text: 'OMOLOGARE MULTIETAPA'},
+        { id: 'U', text: 'OMOLOGARE TIP'},
+        { id: 'V', text: 'OMOLOGARE TIP (TIP NOU)'},
+        { id: 'X', text: 'ATESTAT TEHNIC'},
+        { id: 'Z', text: 'OMOLOGARE SCHIMBARE MOTOR (TIP NOU)'}
+      ]
+    })
+  },
+  attachEvents: function() {
+    var self = this;
+    var box = $('#selectieCererePanelw2ui-window');
+    box.find('#btnClose').on('click', self.close.bind(self));
+    box.find('#btnSave').on('click', self.save.bind(self));
+  },
+  close:function() {
+    this.win.close()
+  },
+  save: function() {
+    app.appciv.controller.editCerereOmologare()
+  }
+})
+},{"./../../templates/registru/selectieCerere.hbs":78}],127:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = Marionette.ItemView.extend({
     className: 'fullscreen',
@@ -11227,43 +13502,70 @@ module.exports = Marionette.ItemView.extend({
     }
 });
 
-},{"./../../models/registru/sistem":37,"./../../templates/registru/sisteme.hbs":71}],113:[function(require,module,exports){
+},{"./../../models/registru/sistem":37,"./../../templates/registru/sisteme.hbs":79}],128:[function(require,module,exports){
 var ipc = requireNode('ipc');
 var Globals = require('./../../globals');
 var ModelDef = require('./../../models/registru/tvvsextensie');
+//var DOIITDef = require('./../../models/vehiculIndividuale')
 module.exports = Marionette.LayoutView.extend({
     template: require('./../../templates/registru/tvvform.hbs'),
-    // classname: 'fullscreen',
-    initialize: function () {
+    attributes: function () {
+        return {
+            style: 'height:100%'
+        }
+    },
+    initialize: function (options) {
         var self = this;
+        this.tip_omol = options.tip_omol;
         this.model = new ModelDef();
-        if(this.options.id_cerere){
-            $.ajax({
-                url:app.dotUrl + 'doiit/getTvvExtensieByCerere/'+ this.options.id_cerere,
-                dataType:'json',
-                contentType:'application/json',
-                success:function(response){
-                    self.model.set(response)
-                    self.setPagePermissions();
-                    self.buildSubViews();
-                    self.formID = 'formTVV' + self.model.id;
-                    self.buildView();
-                    self.setButtons();
-                    self.attachActions();
-                }
-            });
-        }else{
+        this.listenTo(app, 'globals:copy', this.enablePaste.bind(this))
+        this.listenTo(app, 'dosare:resetTVV', this.setModelNew);
+        this.listenTo(app, 'dosare:reloadTVV', this.reloadTVV);
+        if (options.dialog) {
             this.setPagePermissions();
             this.buildSubViews();
-            this.listenTo(app, 'dosare:resetTVV', this.setModelNew);
-            this.listenTo(app, 'dosare:reloadTVV', this.reloadTVV);
-            this.formID = 'formTVV' + this.model.id;
+
+
+
+            this.formID = 'formTVV' + this.model.recid;
+        } else {
+            if (this.options.id_cerere) {
+                $.ajax({
+                    url: app.baseUrl + 'doiit/getTvvExtensieByCerere/' + this.options.id_cerere,
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function (response) {
+                        self.model.set(response)
+                        self.setPagePermissions();
+                        self.buildSubViews();
+                        self.formID = 'formTVV' + self.model.id;
+                        self.buildView();
+                        self.setButtons();
+                        self.attachActions();
+                    }
+                });
+            } else {
+                $.ajax({
+                    url: app.baseUrl + 'doiit/getNewTvvExtensie/',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function (response) {
+                        self.model.set(response)
+                        self.setPagePermissions();
+                        self.buildSubViews();
+                        self.formID = 'formTVV' + self.model.recid;
+                        self.buildView();
+                        self.setButtons();
+                        self.attachActions();
+                    }
+                });
+            }
         }
     },
     setPagePermissions: function () {
         this.allowUnlock = ipc.sendSync('user:request:isuserinrole', [
             [1, 9], 'appdot'
-        ]) && this.model.get('SetDateTVV').get('validat') === 1;
+        ]) && this.model.get('SetDateTVV') && this.model.get('SetDateTVV').get('validat_doiit') === 1;
         this.allowValidate = ipc.sendSync('user:request:isuserinrole', [
             [1, 9, 11], 'appdot'
         ]);
@@ -11280,8 +13582,8 @@ module.exports = Marionette.LayoutView.extend({
             if (dirty)
                 box.find('#btnValideaza').prop('disabled', true);
             else
-            if (this.model.get('SetDateTVV').id)
-                box.find('#btnValideaza').prop('disabled', false);
+                if (this.model.get('SetDateTVV').id)
+                    box.find('#btnValideaza').prop('disabled', false);
 
         }
         this.toggleFisaButton();
@@ -11294,66 +13596,83 @@ module.exports = Marionette.LayoutView.extend({
             box.find('#btnPrintFisa').prop('disabled', true);
     },
     buildSubViews: function () {
-        var GView = require('./general');
-        this.GeneralView = new GView({
-            model: this.model.get('TVV'),
-            extensie: this.model.get('id_extensie')
-        });
-        var MView = require('./dateTehnice');
-        this.MaseView = new MView({
-            type: 'mase',
-            collection: this.model.get('SetDateTVV').get('DateTehnice') //.byGroup('mase')
-        });
-        var PView = require('./dateTehnice');
-        this.PoluareView = new PView({
-            type: 'poluare',
-            iswltp:this.model.get('SetDateTVV').get('iswltp'),
-            collection: this.model.get('SetDateTVV').get('DateTehnice') //.byGroup('poluare')
-        });
-        this.listenTo(app,'wltp:changed',function(val){
-            if(val) this.model.get('SetDateTVV').set('iswltp',1);
-            else this.model.get('SetDateTVV').set('iswltp',0);
-        });
-        var DView = require('./dateTehnice');
-        this.DimensiuniView = new DView({
-            type: 'dimensiuni',
-            collection: this.model.get('SetDateTVV').get('DateTehnice') //.byGroup('dimensiuni')
-            //collection : _.filter(this.model.get('SetDateTVV').get('DateTehnice').models,function(m){return m.get('grupa') === 'dimensiuni'})
-        });
-        var AxView = require('./dateTehnice');
-        this.AxeView = new AxView({
-            type: 'axe',
-            collection: this.model.get('SetDateTVV').get('DateTehnice') //.byGroup('axe')
-        });
-        var AlView = require('./dateTehnice');
-        this.AlteView = new AlView({
-            type: 'altele',
-            collection: this.model.get('SetDateTVV').get('DateTehnice') //.byGroup('altele')
-        });
+        console.log('Tip Omologare: ',this.tip_omol)
+        if (this.model.get('TVV')) {
+            var GView = require('./general');
+            this.GeneralView = new GView({
+                model: this.model.get('TVV'),
+                extensie: this.model.get('id_extensie')
+            });
+        }
+        if (this.model.get('SetDateTVV') && this.model.get('SetDateTVV').get('DateTehnice')) {
+            var MView = require('./dateTehnice');
+            this.MaseView = new MView({
+                type: 'mase',
+                collection: this.model.get('SetDateTVV').get('DateTehnice'),
+                copil:this.tip_omol == "C"
+            });
+            var PView = require('./dateTehnice');
+            this.PoluareView = new PView({
+                type: 'poluare',
+                iswltp: this.model.get('SetDateTVV').get('iswltp'),
+                collection: this.model.get('SetDateTVV').get('DateTehnice'),
+                copil:this.tip_omol == "C"
+            });
+            this.listenTo(app, 'wltp:changed', function (val) {
+                if (val) this.model.get('SetDateTVV').set('iswltp', 1);
+                else this.model.get('SetDateTVV').set('iswltp', 0);
+            });
+            var DView = require('./dateTehnice');
+            this.DimensiuniView = new DView({
+                type: 'dimensiuni',
+                collection: this.model.get('SetDateTVV').get('DateTehnice'),
+                copil:this.tip_omol == "C" //.byGroup('dimensiuni')
+                //collection : _.filter(this.model.get('SetDateTVV').get('DateTehnice').models,function(m){return m.get('grupa') === 'dimensiuni'})
+            });
+            var AxView = require('./dateTehnice');
+            this.AxeView = new AxView({
+                type: 'axe',
+                collection: this.model.get('SetDateTVV').get('DateTehnice'),
+                copil:this.tip_omol == "C" //.byGroup('axe')
+            });
+            var AlView = require('./dateTehnice');
+            this.AlteView = new AlView({
+                type: 'altele',
+                collection: this.model.get('SetDateTVV').get('DateTehnice'),
+                copil:this.tip_omol == "C" //.byGroup('altele')
+            });
 
-        var AnView = require('./anvelope');
-        this.AnvelopeView = new AnView({
-            collection: this.model.get('SetDateTVV').get('Anvelope')
-        });
-        var TView = require('./dateTehnice');
-        this.TransmisieView = new TView({
-            type: 'cv',
-            collection: this.model.get('SetDateTVV').get('DateTehnice') //.byGroup('cv')
-        });
-        var MView = require('./motoare');
-        this.MotoareView = new MView({
-            collection: this.model.get('SetDateTVV').get('Motoare')
-        });
-        var SView = require('./sisteme');
-        this.SistemeView = new SView({
-            collection: this.model.get('SetDateTVV').get('Sisteme'),
-            categorie: this.model.get('TVV').get('categorie'),
-            isnew: this.model.get('TVV').isNew()
-        });
-        var MnView = require('./mentiuni');
-        this.MentiuniView = new MnView({
-            collection: this.model.get('SetDateTVV').get('Mentiuni')
-        });
+            var AnView = require('./anvelope');
+            this.AnvelopeView = new AnView({
+                collection: this.model.get('SetDateTVV').get('Anvelope')
+            });
+            var TView = require('./dateTehnice');
+            this.TransmisieView = new TView({
+                type: 'cv',
+                collection: this.model.get('SetDateTVV').get('DateTehnice'),
+                copil:this.tip_omol == "C" //.byGroup('cv')
+            });
+        }
+        if (this.model.get('SetDateTVV') && this.model.get('SetDateTVV').get('Motoare')) {
+            var MView = require('./motoare');
+            this.MotoareView = new MView({
+                collection: this.model.get('SetDateTVV').get('Motoare')
+            });
+        }
+        if (this.model.get('SetDateTVV') && this.model.get('SetDateTVV').get('Sisteme')) {
+            var SView = require('./sisteme');
+            this.SistemeView = new SView({
+                collection: this.model.get('SetDateTVV').get('Sisteme'),
+                categorie: this.model.get('TVV').get('categorie'),
+                isnew: this.model.get('TVV').isNew()
+            });
+        }
+        if (this.model.get('SetDateTVV') && this.model.get('SetDateTVV').get('Mentiuni')) {
+            var MnView = require('./mentiuni');
+            this.MentiuniView = new MnView({
+                collection: this.model.get('SetDateTVV').get('Mentiuni')
+            });
+        }
     },
     open: function () {
         var self = this;
@@ -11365,9 +13684,10 @@ module.exports = Marionette.LayoutView.extend({
             showMax: true,
             height: '650px',
             resizable: true,
-            toolbarButtons:(self.allowUnlock ? [{id:'unlock',className:'w2ui-icon-lock',click:self.unlockButtons.bind(self)}]:null),
+            toolbarButtons: (self.allowUnlock ? [{ id: 'unlock', className: 'w2ui-icon-lock', click: self.unlockButtons.bind(self) }] : null),
             onOpen: function (event) {
                 event.onComplete = function () {
+                    console.log('Opening TVV Form')
                     self.buildView();
                     self.setButtons();
                     self.attachActions();
@@ -11381,21 +13701,21 @@ module.exports = Marionette.LayoutView.extend({
         });
     },
     getButtonsHtml: function () {
-        return '<div id="formButtons" style="display:none">'+
-        '<span id="editButtons">'+
-        '<button class="btn btn-blue" id="btnSave"><i class="w2ui-icon-save"></i> Salveaza</button>'+
-        '<button class="btn btn-orange" id="btnImportDate"><i class="w2ui-icon-upload"></i> Importa datele de la extensia anterioara</button>'+
-        '<button class="btn btn-green" id="btnValideaza"><i class="w2ui-icon-check"></i> Valideaza datele!</button>'+
-        '</span>'+
-        '<span id="operButtons">'+
-        '<button class="btn btn-blue" id="btnPrintCert"><i class="w2ui-icon-print"></i> Certificat</button>  '+
-        '<button class="btn btn-orange" id="btnPrintAtestat"><i class="w2ui-icon-print"></i> Atestat</button>'+
-        '</span>'+
-        '<button class="btn btn-green" id="btnPrintFisa"><i class="w2ui-icon-print"></i> Fisa</button>'+
-        '<button class="btn btn-red" id="btnClose"><i class="w2ui-icon-cross"></i> Inchide</button>'+
-        '<button class="btn btn-orange" id="copyButton" style="display:none"><i class="w2ui-icon-copy"></i> Copy</button>'+
-        '<button class="btn btn-orange" id="pasteButton" style="display:none"><i class="w2ui-icon-copy"></i> Paste</button>'+
-        '</div>';
+        return '<div id="formButtons" style="display:none">' +
+            '<span id="editButtons">' +
+            '<button class="btn btn-blue" id="btnSave"><i class="w2ui-icon-save"></i> Salveaza</button>' +
+            '<button class="btn btn-orange" id="btnImportDate"><i class="w2ui-icon-upload"></i> Importa datele de la extensia anterioara</button>' +
+            '<button class="btn btn-green" id="btnValideaza"><i class="w2ui-icon-check"></i> Valideaza datele!</button>' +
+            '</span>' +
+            '<span id="operButtons">' +
+            '<button class="btn btn-blue" id="btnPrintCert"><i class="w2ui-icon-print"></i> Certificat</button>  ' +
+            '<button class="btn btn-orange" id="btnPrintAtestat"><i class="w2ui-icon-print"></i> Atestat</button>' +
+            '</span>' +
+            '<button class="btn btn-green" id="btnPrintFisa"><i class="w2ui-icon-print"></i> Fisa</button>' +
+            '<button class="btn btn-red" id="btnClose"><i class="w2ui-icon-cross"></i> Inchide</button>' +
+            '<button class="btn btn-orange" id="copyButton" style="display:none"><i class="w2ui-icon-copy"></i> Copy</button>' +
+            '<button class="btn btn-orange" id="pasteButton" style="display:none"><i class="w2ui-icon-copy"></i> Paste</button>' +
+            '</div>';
     },
     onShow: function () {
         // this.$el.css({
@@ -11406,18 +13726,18 @@ module.exports = Marionette.LayoutView.extend({
     },
     setButtons: function () {
         var box = this.$el;//$('#nrRegistruEditor' + this.model.id + 'w2ui-window');
-        if(this.options.tip_completare === 9){
+        if (this.options.tip_completare === 9) {
             $('#btnImportDate').hide();
             box.find('#editButtons').hide();
             box.find('#copyButton').show();
-        }else{
-            if(Globals.getClipboard()){
+        } else {
+            if (Globals.getClipboard()) {
                 box.find('#pasteButton').show();
             }
             if (this.model.get('SetDateTVV').get('importat') || this.model.get('TVV').isNew()) {
                 $('#btnImportDate').prop('disabled', true);
             }
-            if (this.model.get('SetDateTVV').get('validat') === 1) {
+            if (this.model.get('SetDateTVV').get('validat_doiit') === 1) {
                 box.find('#editButtons').hide();
                 if (this.model.get('TVV').get('nr_registru') && this.allowCerificateView) {
                     box.find('#operButtons').show();
@@ -11426,8 +13746,8 @@ module.exports = Marionette.LayoutView.extend({
             } else {
                 if (!this.allowValidate) {
                     box.find('#btnValideaza').hide();
-                }else{
-                    if(!this.model.get('SetDateTVV').id)box.find('#btnValideaza').prop('disabled',true);
+                } else {
+                    if (!this.model.get('SetDateTVV').id) box.find('#btnValideaza').prop('disabled', true);
                 }
                 if (this.allowEdit)
                     box.find('#editButtons').show();
@@ -11449,7 +13769,7 @@ module.exports = Marionette.LayoutView.extend({
         'click #pasteButton': 'pasteDate',
         'click #btnPrintFisa': 'printFisa'
     },
-    attachActions:function() {
+    attachActions: function () {
         var self = this;
         var box = $('#nrRegistruEditor' + this.model.id + 'w2ui-window');
         box.find('#btnSave').on('click', self.save.bind(self));
@@ -11465,7 +13785,7 @@ module.exports = Marionette.LayoutView.extend({
     },
     buildView: function () {
         var tabs;
-        var hideTab = this.model.get('SetDateTVV').get('DateTehnice').models.length === 0 || this.options.tip_completare === 1;
+        var hideTab = this.model.get('SetDateTVV') && this.model.get('SetDateTVV').get('DateTehnice') && this.model.get('SetDateTVV').get('DateTehnice').models.length === 0 || this.options.tip_completare === 1;
         tabs = [{
             id: 'tabTVV',
             caption: 'Date generale',
@@ -11549,7 +13869,8 @@ module.exports = Marionette.LayoutView.extend({
         if (this.model.get('TVV').get('nr_registru'))
             this.GeneralView.setReadOnly();
         this.$el.css({
-            'opacity': 1
+            'opacity': 1,
+            'height': '100%'
         });
 
     },
@@ -11567,17 +13888,28 @@ module.exports = Marionette.LayoutView.extend({
             'sisteme': '#tabSisteme',
             'mentiuni': '#tabMentiuni',
         });
-        this.dategenerale.show(this.GeneralView);
-        this.dimensiuni.show(this.DimensiuniView);
-        this.mase.show(this.MaseView);
-        this.axe.show(this.AxeView);
-        this.motor.show(this.MotoareView);
-        this.altele.show(this.AlteView);
-        this.transmisie.show(this.TransmisieView);
-        this.poluare.show(this.PoluareView);
-        this.anvelope.show(this.AnvelopeView);
-        this.sisteme.show(this.SistemeView);
-        this.mentiuni.show(this.MentiuniView);
+        if(this.GeneralView)
+            this.dategenerale.show(this.GeneralView);
+        if(this.DimensiuniView)
+            this.dimensiuni.show(this.DimensiuniView);
+        if(this.MaseView)
+            this.mase.show(this.MaseView);
+        if(this.AxeView)
+            this.axe.show(this.AxeView);
+        if(this.MotoareView)
+            this.motor.show(this.MotoareView);
+        if(this.AlteView)
+            this.altele.show(this.AlteView);
+        if(this.TransmisieView)
+            this.transmisie.show(this.TransmisieView);
+        if(this.PoluareView)
+            this.poluare.show(this.PoluareView);
+        if(this.AnvelopeView)
+            this.anvelope.show(this.AnvelopeView);
+        if(this.SistemeView)
+            this.sisteme.show(this.SistemeView);
+        if(this.MentiuniView)
+            this.mentiuni.show(this.MentiuniView);
     },
     tabClicked: function (tab) {
         var me = this;
@@ -11605,40 +13937,41 @@ module.exports = Marionette.LayoutView.extend({
         if (me.forceValidation)
             w2utils.validate(me.model, me.$el);
     },
-    unlockButtons:function(){
-      var self = this;
-      var box = $('#nrRegistruEditor' + this.model.id + 'w2ui-window');
-      $.get(app.dotUrl + '/nrom/GetStatusTVV',{id:self.model.get('TVV').get('id')},function(response){
-        if(response.hasCIV >= 1){
-          self.GeneralView.setReadOnly();
-          self.MaseView.setReadOnly();
-          self.DimensiuniView.setReadOnly();
-          self.AxeView.setReadOnly();
-          self.AlteView.setReadOnly();
-          self.PoluareView.setReadOnly();
-          self.TransmisieView.setReadOnly();
-          self.AnvelopeView.enableEdit();
-          self.MentiuniView.enableEdit();
-        }else{
-          self.GeneralView.setReadOnly();
-          self.AnvelopeView.enableEdit();
-          self.MentiuniView.enableEdit();
-        }
-        box.find('#editButtons').show();
-      })
+    unlockButtons: function () {
+        var self = this;
+        var box = $('#nrRegistruEditor' + this.model.id + 'w2ui-window');
+        $.get(app.dotUrl + '/nrom/GetStatusTVV', { id: self.model.get('TVV').get('id') }, function (response) {
+            if (response.hasCIV >= 1) {
+                self.GeneralView.setReadOnly();
+                self.MaseView.setReadOnly();
+                self.DimensiuniView.setReadOnly();
+                self.AxeView.setReadOnly();
+                self.AlteView.setReadOnly();
+                self.PoluareView.setReadOnly();
+                self.TransmisieView.setReadOnly();
+                self.AnvelopeView.enableEdit();
+                self.MentiuniView.enableEdit();
+            } else {
+                self.GeneralView.setReadOnly();
+                self.AnvelopeView.enableEdit();
+                self.MentiuniView.enableEdit();
+            }
+            box.find('#editButtons').show();
+        })
 
     },
     onBeforeDestroy: function () {
         var me = this;
-        // _.each(w2ui['tabsTVV' + me.cid].tabs, function(tab) {
-        //     if (me[tab.hint])
-        //         me[tab.hint].destroy();
+        // _.each(w2ui[me.formID].tabs, function(tab) {
+        //     // if (me[tab.hint])
+        //     //     me[tab.hint].destroy();
+        //     tab.destroy()
         // });
-        //w2ui[me.formID].destroy();
+        w2ui[me.formID].destroy();
     },
     enableTabs: function () {
         var me = this;
-        _.each(w2ui[me.formID].tabs.tabs, function(tab) {
+        _.each(w2ui[me.formID].tabs.tabs, function (tab) {
             if (tab.hidden)
                 w2ui[me.formID].tabs.show(tab.id);
         });
@@ -11646,58 +13979,58 @@ module.exports = Marionette.LayoutView.extend({
         if (!this.model.get('SetDateTVV').get('importat'))
             box.find('#btnImportDate').prop('disabled', false);
     },
-     save: function() {
+    save: function () {
         var self = this;
         //this.forceValidation = true;
         // console.log(self.model.toJSON());
         // return;
         //if (w2utils.validate(this.model, this.$el)) {
-           w2utils.lock(self.$el, 'Va rugam asteptati', true);
-            var isNew = self.model.get('TVV').isNew() && !self.modifTVVExistent;
-            if (!isNew) {
-                self.model.get('TVV').set('tip_tvv', 4);
-            }
-            this.model.save({}, {
-                silent: true,
-                success: function(response) {
-                    window.isDirty.dirty = false;
-                    // if (response.get('SetDateTVV').get('bun') == 0) {
-                    //     w2alert('ATENTIE!<br>TVV-ul nu este valid deoarece nu indeplineste cerintele ' + response.get('SetDateTVV').get('cineapus_bun') + ' intrate in vigoare la data ' + response.get('SetDateTVV').get('data_bun'));
-                    // }
-                    if (isNew) {
-                        self.refreshSubviews(response.get('SetDateTVV'));
-                        self.SistemeView.options.categorie = self.model.get('TVV').get('categorie');
-                        self.SistemeView.options.isnew = false;
-                        self.SistemeView.refreshUI();
-                        self.enableTabs();
-                        app.trigger('dosar:tvv:add', response);
-                    }else{
-                        app.trigger('dosar:tvv:modified', self.model.get('TVV'));
-                    }
-                    self.setButtons();
-                    var opt = {
-                        title: 'Notificare',
-                        text: 'Inregistrarea a fost salvata!',
-                        type: 'success-template'
-                    };
-                    ipc.send('app:notification:show', opt);
-                    w2utils.unlock(self.$el);
-                },
-                error: function(response) {
-                    var opt = {
-                        title: 'Eroare',
-                        text: response,
-                        type: 'error-template'
-                    };
-                    ipc.send('app:notification:show', opt);
-                    w2utils.unlock(self.$el);
+        w2utils.lock(self.$el, 'Va rugam asteptati', true);
+        var isNew = self.model.get('TVV').isNew() && !self.modifTVVExistent;
+        if (!isNew) {
+            self.model.get('TVV').set('tip_tvv', 4);
+        }
+        this.model.save({}, {
+            silent: true,
+            success: function (response) {
+                window.isDirty.dirty = false;
+                // if (response.get('SetDateTVV').get('bun') == 0) {
+                //     w2alert('ATENTIE!<br>TVV-ul nu este valid deoarece nu indeplineste cerintele ' + response.get('SetDateTVV').get('cineapus_bun') + ' intrate in vigoare la data ' + response.get('SetDateTVV').get('data_bun'));
+                // }
+                if (isNew) {
+                    self.refreshSubviews(response.get('SetDateTVV'));
+                    self.SistemeView.options.categorie = self.model.get('TVV').get('categorie');
+                    self.SistemeView.options.isnew = false;
+                    self.SistemeView.refreshUI();
+                    self.enableTabs();
+                    app.trigger('dosar:tvv:add', response);
+                } else {
+                    app.trigger('dosar:tvv:modified', self.model.get('TVV'));
                 }
-            });
+                self.setButtons();
+                var opt = {
+                    title: 'Notificare',
+                    text: 'Inregistrarea a fost salvata!',
+                    type: 'success-template'
+                };
+                ipc.send('app:notification:show', opt);
+                w2utils.unlock(self.$el);
+            },
+            error: function (response) {
+                var opt = {
+                    title: 'Eroare',
+                    text: response,
+                    type: 'error-template'
+                };
+                ipc.send('app:notification:show', opt);
+                w2utils.unlock(self.$el);
+            }
+        });
         //}
         //console.log(this.model.toJSON());
 
     },
-    refreshSubviews: function(data) {
+    refreshSubviews: function (data) {
         var self = this;
         self.model.set('SetDateTVV', data);
         self.MaseView.collection = self.model.get('SetDateTVV').get('DateTehnice');//.byGroup('mase');
@@ -11714,8 +14047,8 @@ module.exports = Marionette.LayoutView.extend({
         self.TransmisieView.collection = self.model.get('SetDateTVV').get('DateTehnice');//.byGroup('cv');
         self.TransmisieView.render();
         self.SistemeView.collection = self.model.get('SetDateTVV').get('Sisteme');
-        self.SistemeView.options.categorie= self.model.get('TVV').get('categorie'),
-        self.SistemeView.refreshUI();
+        self.SistemeView.options.categorie = self.model.get('TVV').get('categorie'),
+            self.SistemeView.refreshUI();
         self.MentiuniView.collection = self.model.get('SetDateTVV').get('Mentiuni');
         self.MentiuniView.refreshUI();
         self.MotoareView.collection = self.model.get('SetDateTVV').get('Motoare');
@@ -11724,28 +14057,28 @@ module.exports = Marionette.LayoutView.extend({
         self.AnvelopeView.refreshUI();
     },
 
-    reloadTVV:function(tvv){
+    reloadTVV: function (tvv) {
         var self = this;
         var oldid = self.model.get('TVV').id;
         //check if we have a set of data with new tvv
-        $.get(app.dotUrl + 'nrom/getsetdatetvvextensie',{id_tvv:tvv.id,id_extensie:self.model.get('id_extensie')},function(set){
+        $.get(app.dotUrl + 'nrom/getsetdatetvvextensie', { id_tvv: tvv.id, id_extensie: self.model.get('id_extensie') }, function (set) {
             self.model.set('TVV', tvv);
-            self.model.set('id_tvv',tvv.id);
-        // self.GeneralView.model = self.model.get('TVV');
+            self.model.set('id_tvv', tvv.id);
+            // self.GeneralView.model = self.model.get('TVV');
             self.GeneralView.refreshModel(tvv);
-            if(self.model.get('TVV').get('nr_registru'))
-            self.GeneralView.setReadOnly();
-            if(set.id){
+            if (self.model.get('TVV').get('nr_registru'))
+                self.GeneralView.setReadOnly();
+            if (set.id) {
                 self.refreshSubviews(set);
             }
             // app.trigger('dosar:tvv:edit',{old:oldid,tvv:tvv});
         });
-            
+
     },
 
-    importDate: function(e) {
+    importDate: function (e) {
         var self = this;
-        w2confirm('Sigur doriti aducerea datelor de la extensia anterioara?<br>Datele existente se vor sterge!').yes(function() {
+        w2confirm('Sigur doriti aducerea datelor de la extensia anterioara?<br>Datele existente se vor sterge!').yes(function () {
             w2utils.lock(self.$el, 'Va rugam asteptati', true);
             $.ajax({
                 type: 'POST',
@@ -11753,23 +14086,23 @@ module.exports = Marionette.LayoutView.extend({
                 data: {
                     id_tvv: self.model.get('id_tvv'),
                     id_extensie: self.model.get('id_extensie'),
-                    nr_registru_curent:self.model.get('TVV').get('nr_registru'),
-                    nr_registru_preluat:self.model.get('TVV').get('nr_registru_vechi'),
+                    nr_registru_curent: self.model.get('TVV').get('nr_registru'),
+                    nr_registru_preluat: self.model.get('TVV').get('nr_registru_vechi'),
                     wvta: self.model.get('TVV').get('wvta')
                 },
-                success: function(response) {
+                success: function (response) {
                     //console.log(response);
                     response.importat = 1;
-                    response.validat = 0;
+                    response.validat_doiit = 0;
                     response.verificat = '';
                     self.refreshSubviews(response);
                     $(e.target).attr('disabled', true);
                 },
-                error: function(error) {
+                error: function (error) {
                     w2utils.unlock(self.$el);
                     w2alert(error.responseText);
                 }
-            }).done(function() {
+            }).done(function () {
                 window.isDirty.dirty = false;
                 w2utils.unlock(self.$el);
 
@@ -11777,100 +14110,100 @@ module.exports = Marionette.LayoutView.extend({
         });
 
     },
-    validareDate: function() {
+    validareDate: function () {
         var self = this;
         var host;
-        w2confirm('Sigur validati acest numar?').yes(function(){
+        w2confirm('Sigur validati acest numar?').yes(function () {
             if (w2utils.validate(self.model, self.$el)) {
-            w2utils.lock(self.$el, 'Va rugam asteptati', true);
-                ipc.sendSync('user:request:host', null, function(compname) {
-                        host = compname;
-                        self.model.get('SetDateTVV')
-                            .set('validat', 1)
-                            .set('verificat', host)
-                            .set('expert', app.User.expert);
-                        });
+                w2utils.lock(self.$el, 'Va rugam asteptati', true);
+                ipc.sendSync('user:request:host', null, function (compname) {
+                    host = compname;
+                    self.model.get('SetDateTVV')
+                        .set('validat_doiit', 1)
+                        .set('verificat', host)
+                        .set('expert', app.User.expert);
+                });
                 $.ajax(
                     {
-                        dataType:'json',
-                        contentType:'application/json',
-                        type:'POST',
-                        url:app.dotUrl + '/nrom/validaresetdate/'+self.model.id,
-                        data:JSON.stringify(self.model.get('SetDateTVV').toJSON()),
-                        success: function(response) {
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        type: 'POST',
+                        url: app.dotUrl + '/doiit/validaresetdate/' + self.model.id,
+                        data: JSON.stringify(self.model.get('SetDateTVV').toJSON()),
+                        success: function (response) {
                             // self.model.get('SetDateTVV').set(response.set);
                             if (response.status === 'invalid') {
                                 self.model.get('SetDateTVV')
-                                .set('validat', 0)
-                                .set('verificat', '')
-                                .set('expert', '');
-                                w2confirm('ATENTIE!<br>TVV-ul nu este valid deoarece nu indeplineste cerintele ' + response.set.regulament + ' intrate in vigoare la data ' + response.set.data+'<br>Sigur validati?')
-                                    .yes(function() {
-                                           self.model.get('SetDateTVV')
-                                            .set('validat', 1)
+                                    .set('validat_doiit', 0)
+                                    .set('verificat', '')
+                                    .set('expert', '');
+                                w2confirm('ATENTIE!<br>TVV-ul nu este valid deoarece nu indeplineste cerintele ' + response.set.regulament + ' intrate in vigoare la data ' + response.set.data + '<br>Sigur validati?')
+                                    .yes(function () {
+                                        self.model.get('SetDateTVV')
+                                            .set('validat_doiit', 1)
                                             .set('verificat', host)
-                                            .set('override_bun',host)
+                                            .set('override_bun', host)
                                             .set('expert', app.User.expert);
-                                            $.ajax({
-                                                dataType:'json',
-                                                contentType:'application/json',
-                                                type:'POST',
-                                                url:app.dotUrl + '/nrom/overridevalidaresetdate/'+self.model.id,
-                                                data:JSON.stringify(self.model.get('SetDateTVV').toJSON()),
-                                                success:function(response){
-                                                    // self.model.get('SetDateTVV').set(response.set);
-                                                    app.trigger('dosar:tvv:modified', self.model.get('TVV'));
-                                                    self.setButtons();
-                                                    var opt = {
-                                                        title: 'Notificare',
-                                                        text: 'Datele au fost validate!',
-                                                        type: 'success-template'
-                                                    };
-                                                    ipc.send('app:notification:show', opt);
-                                                    w2utils.unlock(self.$el);
-                                                }
-                                            });
+                                        $.ajax({
+                                            dataType: 'json',
+                                            contentType: 'application/json',
+                                            type: 'POST',
+                                            url: app.dotUrl + '/nrom/overridevalidaresetdate/' + self.model.id,
+                                            data: JSON.stringify(self.model.get('SetDateTVV').toJSON()),
+                                            success: function (response) {
+                                                // self.model.get('SetDateTVV').set(response.set);
+                                                app.trigger('dosar:tvv:modified', self.model.get('TVV'));
+                                                self.setButtons();
+                                                var opt = {
+                                                    title: 'Notificare',
+                                                    text: 'Datele au fost validate!',
+                                                    type: 'success-template'
+                                                };
+                                                ipc.send('app:notification:show', opt);
+                                                w2utils.unlock(self.$el);
+                                            }
+                                        });
                                     })
-                                    .no(function() {
+                                    .no(function () {
                                         w2utils.unlock(self.$el);
                                     });
                             } else {
-                                     app.trigger('dosar:tvv:modified', self.model.get('TVV'));
-                                    self.setButtons();
-                                    var opt = {
-                                        title: 'Notificare',
-                                        text: 'Datele au fost validate!',
-                                        type: 'success-template'
-                                    };
-                                    ipc.send('app:notification:show', opt);
-                                    w2utils.unlock(self.$el);
+                                app.trigger('dosar:tvv:modified', self.model.get('TVV'));
+                                self.setButtons();
+                                var opt = {
+                                    title: 'Notificare',
+                                    text: 'Datele au fost validate!',
+                                    type: 'success-template'
+                                };
+                                ipc.send('app:notification:show', opt);
+                                w2utils.unlock(self.$el);
                             }
                         }
-                });
+                    });
             }
         });
 
     },
 
-    printCerificat: function() {
+    printCerificat: function () {
         var url = app.dotUrl + '/nrom/printcomunicare/?id=' + this.model.id;
         ipc.send('app:request:pdf', url);
     },
-    printAtestat: function() {
+    printAtestat: function () {
         var url = app.dotUrl + '/nrom/printatestat/?id=' + this.model.id;
         ipc.send('app:request:pdf', url);
     },
-    printFisa: function() {
+    printFisa: function () {
         //if(!this.model.id){
         //    w2alert('Acest Numar de Registru este generat in sistemul vechi! Va rugam consultati aplicatia APPROVAL!');
         //}else{
-            console.log('printfisa');
-            var url = app.dotUrl + '/nrom/printfisasistem/?nr_registru=' + this.model.get('nr_registru')+'&extensie='+this.model.get('extensie') + '&id=' + this.model.id;
-            ipc.send('app:request:pdf', url);
+        console.log('printfisa');
+        var url = app.dotUrl + '/nrom/printfisasistem/?nr_registru=' + this.model.get('nr_registru') + '&extensie=' + this.model.get('extensie') + '&id=' + this.model.id;
+        ipc.send('app:request:pdf', url);
         //}
     },
-    setModelNew: function(fromClipboard) {
-        if(!fromClipboard){
+    setModelNew: function (fromClipboard) {
+        if (!fromClipboard) {
             this.model.set({
                 id: null,
                 EntityState: 0,
@@ -11881,38 +14214,39 @@ module.exports = Marionette.LayoutView.extend({
                 EntityState: 0,
                 id_tvv: null,
                 validat: null,
+                validat_doiit: null,
                 verificat: ''
             });
         }
-        this.model.get('SetDateTVV').get('DateTehnice').each(function(mdl) {
+        this.model.get('SetDateTVV').get('DateTehnice').each(function (mdl) {
             mdl.set({
                 id: null,
                 EntityState: 0,
                 id_set: null
             })
         });
-        this.model.get('SetDateTVV').get('Anvelope').each(function(mdl) {
+        this.model.get('SetDateTVV').get('Anvelope').each(function (mdl) {
             mdl.set({
                 id: null,
                 EntityState: 0,
                 id_set: null
             })
         });
-        this.model.get('SetDateTVV').get('Motoare').each(function(mdl) {
+        this.model.get('SetDateTVV').get('Motoare').each(function (mdl) {
             mdl.set({
                 id: null,
                 EntityState: 0,
                 id_set: null
             })
         });
-        this.model.get('SetDateTVV').get('Mentiuni').each(function(mdl) {
+        this.model.get('SetDateTVV').get('Mentiuni').each(function (mdl) {
             mdl.set({
                 id: null,
                 EntityState: 0,
                 id_set: null
             })
         });
-        this.model.get('SetDateTVV').get('Sisteme').each(function(mdl) {
+        this.model.get('SetDateTVV').get('Sisteme').each(function (mdl) {
             mdl.set({
                 id: null,
                 EntityState: 0,
@@ -11925,16 +14259,19 @@ module.exports = Marionette.LayoutView.extend({
 
     },
 
-    copyDate:function(){
-        $('#copyButton').attr('disabled',true);
+    enablePaste: function () {
+        this.$el.find('#pasteButton').show();
+    },
+    copyDate: function () {
+        $('#copyButton').attr('disabled', true);
         Globals.setClipboard(this.model.get('SetDateTVV'));
     },
-    pasteDate:function(){
+    pasteDate: function () {
         var self = this;
-        $('#pasteButton').attr('disabled',true);
+        $('#pasteButton').attr('disabled', true);
         var clipboard = Globals.getClipboard();
-        if(clipboard){
-            w2confirm('Datele existente se vor sterge! Sigur doriti inlocuirea datelor?').yes(function(){
+        if (clipboard) {
+            w2confirm('Datele existente se vor sterge! Sigur doriti inlocuirea datelor?').yes(function () {
                 $.ajax({
                     type: 'POST',
                     url: app.dotUrl + '/nrom/DeleteSetDateExistent',
@@ -11942,13 +14279,13 @@ module.exports = Marionette.LayoutView.extend({
                         id_tvv: self.model.get('id_tvv'),
                         id_extensie: self.model.get('id_extensie')
                     },
-                    success: function(response) {
+                    success: function (response) {
                         console.log(response);
                         clipboard.importat = 1;
                         clipboard.validat = 0;
                         clipboard.verificat = '';
-                        clipboard.set('id_tvv',response.id_tvv);
-                        clipboard.set('id_extensie',response.id_extensie);
+                        clipboard.set('id_tvv', response.id_tvv);
+                        clipboard.set('id_extensie', response.id_extensie);
                         self.refreshSubviews(clipboard);
                         self.setModelNew(true);
                         Globals.clearClipboard();
@@ -11965,7 +14302,7 @@ module.exports = Marionette.LayoutView.extend({
         this.win.close();
     }
 });
-},{"./../../globals":24,"./../../models/registru/tvvsextensie":39,"./../../templates/registru/tvvform.hbs":73,"./anvelope":101,"./dateTehnice":104,"./general":106,"./mentiuni":110,"./motoare":111,"./sisteme":112}],114:[function(require,module,exports){
+},{"./../../globals":24,"./../../models/registru/tvvsextensie":39,"./../../templates/registru/tvvform.hbs":81,"./anvelope":109,"./dateTehnice":115,"./general":117,"./mentiuni":121,"./motoare":122,"./sisteme":127}],129:[function(require,module,exports){
 var Model = require('./../../models/vehiculciv');
 var Collection = require('./../../collections/vehiculeciv');
 module.exports = Marionette.ItemView.extend({
@@ -12180,7 +14517,7 @@ module.exports = Marionette.ItemView.extend({
         this.win.destroy();
     }
 });
-},{"./../../collections/vehiculeciv":22,"./../../models/vehiculciv":42,"./../../templates/arhivare.html":44}],115:[function(require,module,exports){
+},{"./../../collections/vehiculeciv":22,"./../../models/vehiculciv":42,"./../../templates/arhivare.html":44}],130:[function(require,module,exports){
 var fs = requireNode('fs');
 
 var PrinterConfig = window.Marionette.ItemView.extend({
@@ -12279,7 +14616,7 @@ var PrinterConfig = window.Marionette.ItemView.extend({
 });
 module.exports = PrinterConfig;
 
-},{}],116:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 var Model = require('./../../models/vehiculciv');
 var Collection = require('./../../collections/vehiculeciv');
 module.exports = Marionette.ItemView.extend({
@@ -12581,7 +14918,7 @@ module.exports = Marionette.ItemView.extend({
         this.win.destroy();
     }
 });
-},{"./../../collections/vehiculeciv":22,"./../../models/vehiculciv":42,"./../../templates/arhivare.html":44}],117:[function(require,module,exports){
+},{"./../../collections/vehiculeciv":22,"./../../models/vehiculciv":42,"./../../templates/arhivare.html":44}],132:[function(require,module,exports){
 var ipc = requireNode('ipc');
    module.exports = Marionette.ItemView.extend({
    	template:require('./../templates/update.html'),
@@ -12613,7 +14950,7 @@ var ipc = requireNode('ipc');
             });
    	}
    });
-},{"./../templates/update.html":74}],118:[function(require,module,exports){
+},{"./../templates/update.html":82}],133:[function(require,module,exports){
  var Globals = require('./../../globals');
  var AnvelopaItemView = window.Marionette.ItemView.extend({
      _ctlFata: undefined,
@@ -12754,7 +15091,7 @@ var ipc = requireNode('ipc');
  });
  module.exports = AnvelopaItemView;
 
-},{"./../../globals":24,"./../../templates/vehicule/anvelopaDropTemplate.hts":75}],119:[function(require,module,exports){
+},{"./../../globals":24,"./../../templates/vehicule/anvelopaDropTemplate.hts":83}],134:[function(require,module,exports){
 var AnvelopaItemView = require('./anvelopa'),
     AnvelopaModel = require('./../../models/anvelopa'),
     Globals = require('./../../globals'),
@@ -12882,7 +15219,7 @@ var AnvelopaItemView = require('./anvelopa'),
     });
 module.exports = AnvelopeAccordionView;
 
-},{"./../../globals":24,"./../../models/anvelopa":25,"./anvelopa":118}],120:[function(require,module,exports){
+},{"./../../globals":24,"./../../models/anvelopa":25,"./anvelopa":133}],135:[function(require,module,exports){
  var AtributItemView = window.Marionette.ItemView.extend({
      source: undefined,
      className: 'w2ui-field',
@@ -12925,6 +15262,7 @@ module.exports = AnvelopeAccordionView;
      },
      setSelect: function() {
          var mdl = this.model;
+         console.log('Model', mdl)
          if (this.source !== '' && this.source !== undefined && this.source !== null) {
              var data = this.source.split('|'),
                  sursa = [],
@@ -12962,14 +15300,20 @@ module.exports = AnvelopeAccordionView;
                      items: sursa
                  });
              }
-             //} else {
-             //    this.model.set('val', data[0]);
-             //    ctl.parent().remove();
-             //}
+            //  } else {
+            //     this.model.set('val', data[0]);
+            //     ctl.parent().remove();
+            //  }
 
-             //                if (self.model.get('EntityState')===0) {
-             //                    self.model.set('val',source.split(',')[0]);
-             //                }
+                            // if (self.model.get('EntityState')===0) {
+                            //     self.model.set('val',source.split(',')[0]);
+                            // }
+        //  }else if(mdl.get('writeto')){
+        //     ctl = this.$el.find('[name="val"]');
+        //     ctl.w2field('list', {
+        //         items: JSON.parse(mdl.get('writeto'))
+        //     });
+        //  }
          }
      },
      setNumeric: function() {
@@ -13000,7 +15344,7 @@ module.exports = AnvelopeAccordionView;
  });
  module.exports = AtributItemView;
 
-},{"./../../templates/vehicule/atributDropTemplate.hts":76,"./../../templates/vehicule/atributFreeTemplate.hts":77,"./../../templates/vehicule/atributItemTemplate.hts":78,"./../../templates/vehicule/tag.hbs":81}],121:[function(require,module,exports){
+},{"./../../templates/vehicule/atributDropTemplate.hts":84,"./../../templates/vehicule/atributFreeTemplate.hts":85,"./../../templates/vehicule/atributItemTemplate.hts":86,"./../../templates/vehicule/tag.hbs":89}],136:[function(require,module,exports){
  var AtributItemView = require('./atribut'),
      AtributeAccordionView = window.Marionette.CompositeView.extend({
          className: 'accordion',
@@ -13008,7 +15352,12 @@ module.exports = AnvelopeAccordionView;
          initialize:function(){
              var self = this;
              self.iswltp = this.options.iswltp;
-             this.wltpAttrs = [290,291,292,293,294,295,296,297,298,299,300,301];
+             //294 - masa incercare
+             //301 - CO2 NEDC
+             //290 - CO2 WLTP
+             //309 - autonomie
+             // 184 - cons en el
+             this.wltpAttrs = [141,291,292,293,295,296,297,298,299,300, 301];
              this.nedcAttrs = [141,142,246,247,248];
              co2wltp = this.options.collection.find(function(m){return m.get('id_nomenclator') == '290'});
              if(co2wltp){
@@ -13151,7 +15500,7 @@ module.exports = AnvelopeAccordionView;
      });
  module.exports = AtributeAccordionView;
 
-},{"./atribut":120}],122:[function(require,module,exports){
+},{"./atribut":135}],137:[function(require,module,exports){
  var postData = {};
  var ipc = requireNode('ipc');
  module.exports = Marionette.ItemView.extend({
@@ -13498,7 +15847,7 @@ module.exports = AnvelopeAccordionView;
      }
  });
 
-},{"./../../templates/vehicule/vins.hts":83}],123:[function(require,module,exports){
+},{"./../../templates/vehicule/vins.hts":91}],138:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = Marionette.ItemView.extend({
     className: 'page',
@@ -13939,7 +16288,7 @@ module.exports = Marionette.ItemView.extend({
 
 });
 
-},{"./../../templates/vehicule/spreadsheet.hts":80}],124:[function(require,module,exports){
+},{"./../../templates/vehicule/spreadsheet.hts":88}],139:[function(require,module,exports){
 var ipc = requireNode('ipc');
 var Globals = require('./../../globals');
 var root, vehicul,
@@ -14559,7 +16908,7 @@ var root, vehicul,
     });
 module.exports = EditView;
 
-},{"./../../globals":24,"./../../templates/vehicule/vehicul.hts":82}],125:[function(require,module,exports){
+},{"./../../globals":24,"./../../templates/vehicule/vehicul.hts":90}],140:[function(require,module,exports){
 var ipc = requireNode('ipc');
 module.exports = window.Marionette.CompositeView.extend({
     template: require('./../../templates/vehicule/index.hts'),
@@ -14900,7 +17249,7 @@ module.exports = window.Marionette.CompositeView.extend({
     }
 });
 
-},{"./../../templates/vehicule/index.hts":79}],126:[function(require,module,exports){
+},{"./../../templates/vehicule/index.hts":87}],141:[function(require,module,exports){
 var ipc = requireNode('ipc'); //intercomm module
 var HomeView = require('./views/index'),
     FooterView = require('./views/footer'),
@@ -14999,7 +17348,7 @@ var HomeView = require('./views/index'),
 
 module.exports = controller;
 
-},{"./models/user":130,"./views/footer":139,"./views/index":140,"./views/info":141,"./views/login":142,"./views/menu":143,"./views/profile":144,"./views/settings":145}],127:[function(require,module,exports){
+},{"./models/user":145,"./views/footer":154,"./views/index":155,"./views/info":156,"./views/login":157,"./views/menu":158,"./views/profile":159,"./views/settings":160}],142:[function(require,module,exports){
 
 // window.$ = window.jQuery = global.$ = require('jquery');
 // // var base = 'f:/gitresources';
@@ -15038,7 +17387,7 @@ module.exports = controller;
 require('./../backend/startup');
 
 
-},{"./../backend/startup":5}],128:[function(require,module,exports){
+},{"./../backend/startup":5}],143:[function(require,module,exports){
 (function (global){
 
 
@@ -15194,6 +17543,13 @@ app.commands.setHandler('app:user:logout', function(appname) {
     });
 });
 
+app.commands.setHandler('registru:search:nrreg', function() {
+    var SearchFormView = require('./applications/appciv/views/registru/searchView');
+    app.modal.show(new SearchFormView(), {
+            preventDestroy: true
+    });
+});
+
 app.commands.setHandler('app:set:pagetitle', function(page) {
     $('#lblPageTitle').html(normalizeTitle(page.page));
 });
@@ -15201,6 +17557,14 @@ app.commands.setHandler('app:set:pagetitle', function(page) {
 app.commands.setHandler('app:request:info', function() {
     app.controller.info();
 });
+
+app.commands.setHandler('registru:cerereomologare', function() {
+    var CerereOmologare = require('./applications/appciv/views/registru/selectieCerere')
+    app.modal.show(new CerereOmologare(),{
+        preventDestroy:true,
+        modal:true
+    })
+})
 
 /**
  * ***************************END APPLICATION COMMANDS**************************
@@ -15229,6 +17593,7 @@ app.on('app:request', function(data) {
     }
     // cal the requested resource
     //try {
+    console.log(data)
     app.currentApp.controller[data.page].call(this, data.params);
     app.execute('app:set:pagetitle', {
         page: data.page
@@ -15314,7 +17679,7 @@ app.on('start', function(cb) {
 module.exports = app;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./../backend/config":1,"./applications/appciv/appciv":10,"./controller":126,"./router":131}],129:[function(require,module,exports){
+},{"./../backend/config":1,"./applications/appciv/appciv":10,"./applications/appciv/views/registru/searchView":125,"./applications/appciv/views/registru/selectieCerere":126,"./controller":141,"./router":146}],144:[function(require,module,exports){
 var Profile = Backbone.SModel.extend({
     idAttribute: 'id_user',
     urlRoot: function() {
@@ -15323,7 +17688,7 @@ var Profile = Backbone.SModel.extend({
 });
 module.exports = Profile;
 
-},{}],130:[function(require,module,exports){
+},{}],145:[function(require,module,exports){
  var Backbone = window.Backbone;
  var User = Backbone.SModel.extend({
      defaults: {
@@ -15350,7 +17715,7 @@ module.exports = Profile;
  });
  module.exports = User;
 
-},{}],131:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 var Router = Marionette.AppRouter.extend({
     appRoutes: {
         'home': 'home',
@@ -15363,7 +17728,7 @@ var Router = Marionette.AppRouter.extend({
 });
 module.exports = Router;
 
-},{}],132:[function(require,module,exports){
+},{}],147:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -15375,7 +17740,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"footer\" style=\"padding:2px\"></div>";
   });
 
-},{"hbsfy/runtime":153}],133:[function(require,module,exports){
+},{"hbsfy/runtime":168}],148:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -15392,7 +17757,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],134:[function(require,module,exports){
+},{"hbsfy/runtime":168}],149:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -15409,7 +17774,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return buffer;
   });
 
-},{"hbsfy/runtime":153}],135:[function(require,module,exports){
+},{"hbsfy/runtime":168}],150:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -15421,7 +17786,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div class=\"w2ui-page page-0 modalContent\" id=\"loginForm\" style=\"width:430px\"> \r\n    <div class=\"w2ui-field\">\r\n        <label>Username:</label>\r\n        <div>\r\n            <input name=\"username\" id=\"username\" list=\"usrlist\" type=\"text\" maxlength=\"100\" style=\"width: 250px\"/>\r\n            <datalist id=\"usrlist\"></datalist>\r\n        </div>\r\n    </div>\r\n    <div class=\"w2ui-field\">\r\n        <label>Password:</label>\r\n        <div>\r\n            <input name=\"password\" id=\"password\" type=\"password\" maxlength=\"100\" style=\"width: 250px\"/>\r\n        </div>\r\n    </div>\r\n    <div class=\"w2ui-field\">\r\n        <label>Retine datele:</label>\r\n        <div>\r\n            <input name=\"rememberme\" id=\"rememberme\" type=\"checkbox\"/>\r\n        </div>\r\n    </div>\r\n</div> \r\n<div class=\"w2ui-buttons\"> \r\n    <button class=\"btn btn-red\"  name=\"cancel\">Cancel</button>\r\n    <button class=\"btn btn-blue\" name=\"login\">Login</button>\r\n</div>";
   });
 
-},{"hbsfy/runtime":153}],136:[function(require,module,exports){
+},{"hbsfy/runtime":168}],151:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -15433,7 +17798,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"header\">\r\n\r\n</div>\r\n";
   });
 
-},{"hbsfy/runtime":153}],137:[function(require,module,exports){
+},{"hbsfy/runtime":168}],152:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -15445,7 +17810,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return "<div id=\"userContainer\" class=\"well-centered\">\r\n    <div class=\"w2ui-page page-0\">\r\n        <div class=\"w2ui-field\">\r\n            <label>Username:</label>\r\n            <div>\r\n                <input name=\"username\" id=\"username\" type=\"text\" maxlength=\"100\" size=\"40\" readonly/>\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Nume afisat:</label>\r\n            <div>\r\n                <input name=\"user_displayname\" id=\"user_displayname\" type=\"text\" maxlength=\"100\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Email:</label>\r\n            <div>\r\n                <input name=\"email\" id=\"email\" type=\"email\" maxlength=\"100\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n    </div>\r\n    <!--Date proxy-->\r\n    <div class=\"w2ui-page page-1\">\r\n        <div class=\"w2ui-field\">\r\n            <label> Activeaza proxy:</label>\r\n            <div>\r\n                <input type=\"checkbox\" name=\"setupproxy\" id=\"setupproxy\" />\r\n                <span class=\"check\"></span>\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Protocol(http/https):</label>\r\n            <div>\r\n                <input type=\"text\" name=\"proxy_protocol\" id=\"proxy_protocol\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> User:</label>\r\n            <div>\r\n                <input type=\"text\" name=\"proxy_user\" id=\"proxy_user\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Password:</label>\r\n            <div>\r\n                <input type=\"password\" name=\"proxy_pass\" id=\"proxy_pass\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Adresa(ip):</label>\r\n            <div>\r\n                <input type=\"text\" name=\"proxy_address\" id=\"proxy_address\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Port:</label>\r\n            <div>\r\n                <input type=\"text\" name=\"proxy_port\" id=\"proxy_port\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n    </div>\r\n    <div class=\"w2ui-page page-2\">\r\n        <div class=\"w2ui-field\">\r\n            <label> Parola curenta:</label>\r\n            <div>\r\n                <input type=\"password\" name=\"password\" id=\"password\" class=\"form-control\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Parola noua:</label>\r\n            <div>\r\n                <input type=\"password\" name=\"newpass\" id=\"newpass\" class=\"form-control\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Confirma parola:</label>\r\n            <div>\r\n                <input type=\"password\" name=\"confirmedpass\" id=\"confirmedpass\" class=\"form-control\" />\r\n            </div>\r\n        </div>\r\n    </div>\r\n    <!--Date Beneficiar-->\r\n    <div class=\"w2ui-page page-3\">\r\n        <div class=\"w2ui-field\">\r\n            <label>Denumire beneficiar</label>\r\n            <div>\r\n                <input name=\"company\" id=\"company\" type=\"text\" maxlength=\"150\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Adresa:</label>\r\n            <div>\r\n                <textarea name=\"address\" id=\"address\" style=\"width: 318px; height: 80px; resize: none\"></textarea>\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Telefon</label>\r\n            <div>\r\n                <input name=\"telefon\" id=\"telefon\" type=\"text\" maxlength=\"150\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Fax</label>\r\n            <div>\r\n                <input name=\"fax\" id=\"fax\" type=\"text\" maxlength=\"150\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Reprezentanti legali</label>\r\n            <div id=\"grid_rep\" style=\"width:500px;min-height:250px\">\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Calitate</label>\r\n            <div>\r\n                <input name=\"calitate\" id=\"calitate\" type=\"text\" maxlength=\"150\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Registrul Comertului</label>\r\n            <div>\r\n                <input name=\"nr_reg_com\" id=\"nr_reg_com\" type=\"text\" maxlength=\"150\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>CUI</label>\r\n            <div>\r\n                <input name=\"cui\" id=\"cui\" type=\"text\" maxlength=\"150\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>IBAN</label>\r\n            <div>\r\n                <input name=\"cont\" id=\"cont\" type=\"text\" maxlength=\"150\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label>Banca</label>\r\n            <div>\r\n                <input name=\"banca\" id=\"banca\" type=\"text\" maxlength=\"150\" size=\"40\" />\r\n            </div>\r\n        </div>\r\n    </div>\r\n    <div class=\"w2ui-buttons\">\r\n        <button class=\"btn\" name=\"reset\">Resetare cache</button>\r\n        <button class=\"btn\" name=\"save\">Save</button>\r\n    </div>\r\n</div>\r\n<div class=\"well well-sm well-centered\">\r\n    Nota: Pentru modificarea utilizatorilor corespunzatori beneficiarului va rugam sa contactati reprezentantii RAR.\r\n</div>\r\n";
   });
 
-},{"hbsfy/runtime":153}],138:[function(require,module,exports){
+},{"hbsfy/runtime":168}],153:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -15457,7 +17822,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   return " <div  style=\"width:500px;\">\r\n <div class=\"w2ui-page page-1\">\r\n        <div class=\"w2ui-field\">\r\n            <label> Activeaza proxy:</label>\r\n            <div>\r\n                <input type=\"checkbox\" name=\"setupproxy\" id=\"setupproxy\" />\r\n                <span class=\"check\"></span>\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Protocol:</label>\r\n            <div>\r\n                <input type=\"text\" name=\"proxy_protocol\" id=\"proxy_protocol\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> User:</label>\r\n            <div>\r\n                <input type=\"text\" name=\"proxy_user\" id=\"proxy_user\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Password:</label>\r\n            <div>\r\n                <input type=\"password\" name=\"proxy_pass\" id=\"proxy_pass\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Adresa(ip):</label>\r\n            <div>\r\n                <input type=\"text\" name=\"proxy_address\" id=\"proxy_address\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n        <div class=\"w2ui-field\">\r\n            <label> Port:</label>\r\n            <div>\r\n                <input type=\"text\" name=\"proxy_port\" id=\"proxy_port\" class=\"proxydata form-control\" disabled=\"disabled\" />\r\n            </div>\r\n        </div>\r\n    </div>\r\n     <div class=\"w2ui-buttons\">\r\n        <button class=\"btn\" name=\"reset\" id=\"btnReset\">Resetare proxy</button>\r\n        <button class=\"btn\" name=\"save\" id=\"btnSaveSettings\">Save</button>\r\n    </div>\r\n</div>";
   });
 
-},{"hbsfy/runtime":153}],139:[function(require,module,exports){
+},{"hbsfy/runtime":168}],154:[function(require,module,exports){
  var gui = requireNode('nw.gui');
   var pkg = gui.App.manifest;
  var footer = window.Marionette.ItemView.extend({
@@ -15589,7 +17954,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
  });
  module.exports = footer;
 
-},{"./../templates/footer.html":132}],140:[function(require,module,exports){
+},{"./../templates/footer.html":147}],155:[function(require,module,exports){
     var home = window.Marionette.ItemView.extend({
 
         template: require('./../templates/index.html'),
@@ -15607,7 +17972,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
     });
     module.exports = home;
 
-},{"./../templates/index.html":133}],141:[function(require,module,exports){
+},{"./../templates/index.html":148}],156:[function(require,module,exports){
 var InfoView = Marionette.ItemView.extend({
     template: require('./../templates/info.html'),
     initialize: function() {},
@@ -15637,7 +18002,7 @@ var InfoView = Marionette.ItemView.extend({
 });
 module.exports = InfoView;
 
-},{"./../templates/info.html":134}],142:[function(require,module,exports){
+},{"./../templates/info.html":149}],157:[function(require,module,exports){
     var ipc = window.requireNode('ipc');
     var root;
     var usrlist;
@@ -15755,7 +18120,7 @@ module.exports = InfoView;
     });
     module.exports = LoginView;
 
-},{"./../templates/login.html":135}],143:[function(require,module,exports){
+},{"./../templates/login.html":150}],158:[function(require,module,exports){
 var ipc = requireNode('ipc');
 var gui = requireNode('nw.gui');
 var Settings = require('./../../backend/config');
@@ -15978,7 +18343,7 @@ module.exports = Marionette.ItemView.extend({
     }
 });
 
-},{"./../../backend/config":1,"./../templates/menu.html":136}],144:[function(require,module,exports){
+},{"./../../backend/config":1,"./../templates/menu.html":151}],159:[function(require,module,exports){
    var ipc = requireNode('ipc');
    var ProfileView = Marionette.ItemView.extend({
        hasproxy: false,
@@ -16392,7 +18757,7 @@ module.exports = Marionette.ItemView.extend({
    });
    module.exports = ProfileView;
 
-},{"./../models/profile":129,"./../templates/profile.html":137}],145:[function(require,module,exports){
+},{"./../models/profile":144,"./../templates/profile.html":152}],160:[function(require,module,exports){
 var ipc = requireNode('ipc');
    var SettingsView = Marionette.ItemView.extend({
        hasproxy: false,
@@ -16476,7 +18841,7 @@ var ipc = requireNode('ipc');
    });
 
    module.exports = SettingsView;
-},{"./../templates/settings.html":138}],146:[function(require,module,exports){
+},{"./../templates/settings.html":153}],161:[function(require,module,exports){
 "use strict";
 /*globals Handlebars: true */
 var base = require("./handlebars/base");
@@ -16509,7 +18874,7 @@ var Handlebars = create();
 Handlebars.create = create;
 
 exports["default"] = Handlebars;
-},{"./handlebars/base":147,"./handlebars/exception":148,"./handlebars/runtime":149,"./handlebars/safe-string":150,"./handlebars/utils":151}],147:[function(require,module,exports){
+},{"./handlebars/base":162,"./handlebars/exception":163,"./handlebars/runtime":164,"./handlebars/safe-string":165,"./handlebars/utils":166}],162:[function(require,module,exports){
 "use strict";
 var Utils = require("./utils");
 var Exception = require("./exception")["default"];
@@ -16690,7 +19055,7 @@ exports.log = log;var createFrame = function(object) {
   return obj;
 };
 exports.createFrame = createFrame;
-},{"./exception":148,"./utils":151}],148:[function(require,module,exports){
+},{"./exception":163,"./utils":166}],163:[function(require,module,exports){
 "use strict";
 
 var errorProps = ['description', 'fileName', 'lineNumber', 'message', 'name', 'number', 'stack'];
@@ -16719,7 +19084,7 @@ function Exception(message, node) {
 Exception.prototype = new Error();
 
 exports["default"] = Exception;
-},{}],149:[function(require,module,exports){
+},{}],164:[function(require,module,exports){
 "use strict";
 var Utils = require("./utils");
 var Exception = require("./exception")["default"];
@@ -16857,7 +19222,7 @@ exports.program = program;function invokePartial(partial, name, context, helpers
 exports.invokePartial = invokePartial;function noop() { return ""; }
 
 exports.noop = noop;
-},{"./base":147,"./exception":148,"./utils":151}],150:[function(require,module,exports){
+},{"./base":162,"./exception":163,"./utils":166}],165:[function(require,module,exports){
 "use strict";
 // Build out our basic SafeString type
 function SafeString(string) {
@@ -16869,7 +19234,7 @@ SafeString.prototype.toString = function() {
 };
 
 exports["default"] = SafeString;
-},{}],151:[function(require,module,exports){
+},{}],166:[function(require,module,exports){
 "use strict";
 /*jshint -W004 */
 var SafeString = require("./safe-string")["default"];
@@ -16946,12 +19311,12 @@ exports.escapeExpression = escapeExpression;function isEmpty(value) {
 }
 
 exports.isEmpty = isEmpty;
-},{"./safe-string":150}],152:[function(require,module,exports){
+},{"./safe-string":165}],167:[function(require,module,exports){
 // Create a simple path alias to allow browserify to resolve
 // the runtime on a supported path.
 module.exports = require('./dist/cjs/handlebars.runtime');
 
-},{"./dist/cjs/handlebars.runtime":146}],153:[function(require,module,exports){
+},{"./dist/cjs/handlebars.runtime":161}],168:[function(require,module,exports){
 module.exports = require("handlebars/runtime")["default"];
 
-},{"handlebars/runtime":152}]},{},[127]);
+},{"handlebars/runtime":167}]},{},[142]);

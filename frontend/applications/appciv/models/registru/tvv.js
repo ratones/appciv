@@ -3,11 +3,11 @@ module.exports = Backbone.SModel.extend({
     defaults: {
         cod_tip_omologare: 'W',
         tip_omologare: 'INREGISTRARE DE TIP',
-        canBeDirty:true,
-        isViewInitialized:false
+        canBeDirty: true,
+        isViewInitialized: false
     },
-    initialize:function(){
-        if(this.get('isViewInitialized')){
+    initialize: function () {
+        if (this.get('isViewInitialized')) {
 
         }
         // $('#marca').w2field().reinit();
@@ -16,19 +16,19 @@ module.exports = Backbone.SModel.extend({
         //     $('#versiune').w2field().reinit();
         //     $('#denumire_comerciala').w2field().reinit();
     },
-    bindEvents:function(){
+    bindEvents: function () {
         var self = this;
-        this.listenTo(this,'change:cod_tip_omologare',function(){
+        this.listenTo(this, 'change:cod_tip_omologare', function () {
             self.unset('cod_caroserie').unset('caroserie');
             $('#cod_caroserie').w2field().reinit();
         });
-        this.listenTo(this,'change:categorie',function(e){
-            if(!self.get('nr_registru')){
+        this.listenTo(this, 'change:categorie', function (e) {
+            if (!self.get('nr_registru')) {
                 self.unset('cod_categorie').unset('categorie_folosinta');
                 $('#cod_categorie').w2field().reinit();
             }
         });
-        this.listenTo(this,'change:cod_categorie',function(){
+        this.listenTo(this, 'change:cod_categorie', function () {
             self.unset('cod_caroserie').unset('caroserie');
             $('#cod_caroserie').w2field().reinit();
             $('#id_clasa').w2field().reinit();
@@ -37,28 +37,48 @@ module.exports = Backbone.SModel.extend({
         //     self.unset('marca').unset('cod_marca');
         //     $('#marca').w2field().reinit();
         // });
-        this.listenTo(this,'change:marca',function(){
-            self.unset('tip').unset('cod_tip');
-            $('#tip').w2field().reinit();
+        this.listenTo(this, 'change:marca', function () {
+            // self.unset('tip').unset('cod_tip');
+            // $('#tip').w2field().reinit();
         });
-        this.listenTo(this,'change:tip',function(){
-            self.unset('varianta').unset('cod_varianta');
-            $('#varianta').w2field().reinit();
+        this.listenTo(this, 'change:tip', function () {
+            // self.unset('varianta').unset('cod_varianta');
+            // $('#varianta').w2field().reinit();
         });
-        this.listenTo(this,'change:varianta',function(){
-            self.unset('versiune').unset('cod_versiune');
-            $('#versiune').w2field().reinit();
+        this.listenTo(this, 'change:varianta', function () {
+            // self.unset('versiune').unset('cod_versiune');
+            // $('#versiune').w2field().reinit();
         });
-        this.listenTo(this,'change:versiune',function(){
-            self.unset('denumire_comerciala');
-            $('#denumire_comerciala').w2field().reinit();
+        this.listenTo(this, 'change:versiune', function () {
+            // self.unset('denumire_comerciala');
+            // $('#denumire_comerciala').w2field().reinit();
         });
     },
-    fields: function() {
+    fields: function () {
         var self = this;
         var tipomol = [
-            {id:'W',text:'INREGISTRARE DE TIP'},
-            {id:'Y',text:'INREGISTRARE DE TIP(TIP NOU)'}
+            { id: 'W', text: 'INREGISTRARE DE TIP' },
+            { id: 'Y', text: 'INREGISTRARE DE TIP (TIP NOU)' },
+            { id: '1', text: 'ATESTAT TEHNIC (TIP NOU)'},
+            { id: '4', text: ' '},
+            { id: '5', text: ' '},
+            { id: '6', text: 'CONSTATARE TEHNICA'},
+            { id: '7', text: 'VERIFICARE TEHNICA'},
+            { id: 'B', text: 'OMOLOGARE ARTIZANALA'},
+            { id: 'C', text: 'OMOLOGARE CU COC'},
+            { id: 'D', text: 'OMOLOGARE SCHIMBARE CAROSERIE'},
+            { id: 'E', text: 'OMOLOGARE CU COC (TIP NOU)'},
+            { id: 'G', text: 'OMOLOGARE FARA COC (TIP NOU)'},
+            { id: 'H', text: 'OMOLOGARE SCHIMBARE CAROSERIE (TIP NOU)'},
+            { id: 'J', text: 'OMOLOGARE FARA COC'},
+            { id: 'K', text: 'OMOLOGARE ARTIZANALA (TIP NOU)'},
+            { id: 'N', text: 'OMOLOGARE SCHIMBARE MOTOR'},
+            { id: 'P', text: 'OMOLOGARE MULTIETAPA (TIP NOU)'},
+            { id: 'R', text: 'OMOLOGARE MULTIETAPA'},
+            { id: 'U', text: 'OMOLOGARE TIP'},
+            { id: 'V', text: 'OMOLOGARE TIP (TIP NOU)'},
+            { id: 'X', text: 'ATESTAT TEHNIC'},
+            { id: 'Z', text: 'OMOLOGARE SCHIMBARE MOTOR (TIP NOU)'}
         ];
         var fields = [
             // {
@@ -106,9 +126,9 @@ module.exports = Backbone.SModel.extend({
                 el: '#cod_tip_omologare',
                 type: 'list',
                 options: {
-                    items:tipomol,
+                    items: tipomol,
                     minLength: 0,
-                    onChange: function(e) {
+                    onChange: function (e) {
                         var selected = e.item;
                         self.set('cod_tip_omologare', selected.id);
                         self.set('tip_omologare', selected.text);
@@ -124,20 +144,58 @@ module.exports = Backbone.SModel.extend({
                 el: '#nr_registru',
                 type: 'text'
             }, {
-                name: 'wvta',
                 el: '#wvta',
-                type: 'text'
+                name: 'wvta',
+                type: 'combo',
+                //required:self.get('tip_cerere')===9,
+                options: {
+                    url: app.dotUrl + '/nrom/getwvta',
+                    minLength: 0,
+                    cascadeTo: ['#extensie','#categorie','#cod_categorie','#cod_caroserie','#tip','#varianta','#versiune'] ,
+                },
+                selected: {
+                    id: self.get('id_wvta'),
+                    text: self.get('wvta')
+                },
+
+                
+                idField: 'id_wvta',
+                txtField: 'wvta'
+                // change: function(e) {
+                //     var selected = $('#wvta').data('selected');
+                //     self.set('data_wvta', selected.data_wvta);
+                // }
             }, {
-                name: 'cnot',
-                el: '#cnot',
-                type: 'text'
+                el: '#extensie',
+                name: 'extensie',
+                type: 'combo',
+                ///required: true,
+                options: {
+                    minLength: 0,
+                    url: function () {
+                        return app.dotUrl + '/nrom/getListExtensiiWVTA';
+                    },
+                    postData: function () {
+                        return {
+                            id_wvta: self.get('id_wvta') || '0',
+                        };
+                    },
+                    cascadeTo: ['#categorie','#cod_categorie','#cod_caroserie','#tip','#varianta','#versiune']
+                },
+                selected: {
+                    id: self.get('id_extensie'),
+                    text: self.get('extensie')
+                },
+                // change: function () {
+                //     var selected = $('#id_extensie').data('selected');
+                //     self.set('extensie', selected.text);
+                //     self.set('id_extensie', selected.id);
+                // },
+                idField: 'id_extensie',
+                txtField: 'extensie'
             }, {
                 name: 'observatii',
                 el: '#observatii',
-                type: 'text'
-            }, {
-                name: 'extensie',
-                el: '#extensie',
                 type: 'text'
             }, {
                 name: 'categorie',
@@ -145,21 +203,21 @@ module.exports = Backbone.SModel.extend({
                 type: 'enum',
                 required: true,
                 options: {
-                    url: function() {
+                    url: function () {
                         return app.dotUrl + '/nrom/getcategeu';
                     },
                     minLength: 0,
                     // selected:self.get('categorie'),
-                    selected: self.get('categorie')?self.get('categorie').split('|'):'',
-                    onChange:function(e){
+                    selected: self.get('categorie') ? self.get('categorie').split('|') : '',
+                    onChange: function (e) {
                         var selected = $(e.target).data('selected');
                         console.log(selected);
-                        if(selected.length <= 0 && !self.get('categorie')) return;
+                        if (selected.length <= 0 && !self.get('categorie')) return;
                         var val = '';
-                        selected.map(function(el){
+                        selected.map(function (el) {
                             val += '|' + el.text;
                         });
-                        self.set('categorie', val.substr(1,val.length));
+                        self.set('categorie', val.substr(1, val.length));
                     }
                 }
             }, {
@@ -168,9 +226,9 @@ module.exports = Backbone.SModel.extend({
                 type: 'list',
                 options: {
                     url: app.dotUrl + '/nrom/getcategfol',
-                    postData: function() {
+                    postData: function () {
                         return {
-                            cateu: self.get('categorie').split('|')[0]
+                            cateu: self.get('categorie') ? self.get('categorie').split('|')[0] : ''
                         };
                     },
                     minLength: 0,
@@ -178,8 +236,8 @@ module.exports = Backbone.SModel.extend({
                         id: self.get('cod_categorie'),
                         text: self.get('categorie_folosinta')
                     },
-                    onChange:function(e){
-                        self.set('cod_categorie',e.item.id).set('categorie_folosinta', e.item.text);
+                    onChange: function (e) {
+                        self.set('cod_categorie', e.item.id).set('categorie_folosinta', e.item.text);
                     }
                 },
                 required: true
@@ -190,7 +248,7 @@ module.exports = Backbone.SModel.extend({
                 options: {
                     url: app.dotUrl + '/nrom/getclase',
                     minLength: 0,
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie')
                         };
@@ -199,8 +257,8 @@ module.exports = Backbone.SModel.extend({
                         id: self.get('id_clasa'),
                         text: self.get('clasa')
                     },
-                    onChange:function(e){
-                        self.set('id_clasa',e.item.id).set('clasa', e.item.text);
+                    onChange: function (e) {
+                        self.set('id_clasa', e.item.id).set('clasa', e.item.text);
                     }
                 }
             }, {
@@ -209,9 +267,9 @@ module.exports = Backbone.SModel.extend({
                 type: 'list',
                 options: {
                     url: app.dotUrl + '/nrom/getcaroserii',
-                    postData: function() {
+                    postData: function () {
                         return {
-                            tip_omol:self.get('cod_tip_omologare'),
+                            tip_omol: self.get('cod_tip_omologare'),
                             cat_fol: self.get('cod_categorie')
                         };
                     },
@@ -221,8 +279,8 @@ module.exports = Backbone.SModel.extend({
                         id: self.get('cod_caroserie'),
                         text: self.get('caroserie')
                     },
-                    onChange:function(e){
-                        self.set('cod_caroserie',e.item.id).set('caroserie', e.item.text);
+                    onChange: function (e) {
+                        self.set('cod_caroserie', e.item.id).set('caroserie', e.item.text);
                     }
                 },
                 required: true
@@ -232,7 +290,7 @@ module.exports = Backbone.SModel.extend({
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/getmarci',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie')
@@ -249,22 +307,22 @@ module.exports = Backbone.SModel.extend({
                 //         self.set('cod_marca',selected.id).set('marca', selected.text);
                 // },
                 required: true,
-                idField:'cod_marca',
-                txtField:'marca'
+                idField: 'cod_marca',
+                txtField: 'marca'
             }, {
                 name: 'tip',
                 el: '#tip',
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/gettipuri',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie'),
                             cod_marca: self.get('cod_marca')
                         };
                     },
-                    renderDrop: function(e) {
+                    renderDrop: function (e) {
                         return '<td>' + e.id + '</td><td>' + e.text + '</td>';
                     },
                     minLength: 0,
@@ -279,15 +337,15 @@ module.exports = Backbone.SModel.extend({
                 //     self.set('cod_tip',selected.id).set('tip', selected.text);
                 // },
                 required: true,
-                idField:'cod_tip',
-                txtField:'tip'
+                idField: 'cod_tip',
+                txtField: 'tip'
             }, {
                 name: 'varianta',
                 el: '#varianta',
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/getvariante',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie'),
@@ -295,7 +353,7 @@ module.exports = Backbone.SModel.extend({
                             cod_tip: self.get('cod_tip')
                         };
                     },
-                    renderDrop: function(e) {
+                    renderDrop: function (e) {
                         return '<td>' + e.id + '</td><td>' + e.text + '</td>';
                     },
                     minLength: 0,
@@ -310,15 +368,15 @@ module.exports = Backbone.SModel.extend({
                 //     self.set('cod_varianta',selected.id).set('varianta', selected.text);
                 // },
                 required: true,
-                idField:'cod_varianta',
-                txtField:'varianta'
+                idField: 'cod_varianta',
+                txtField: 'varianta'
             }, {
                 name: 'versiune',
                 el: '#versiune',
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/getversiuni',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie'),
@@ -327,7 +385,7 @@ module.exports = Backbone.SModel.extend({
                             cod_varianta: self.get('cod_varianta')
                         };
                     },
-                    renderDrop: function(e) {
+                    renderDrop: function (e) {
                         return '<td>' + e.id + '</td><td>' + e.text + '</td>';
                     },
                     minLength: 1,
@@ -337,7 +395,7 @@ module.exports = Backbone.SModel.extend({
                         text: self.get('versiune')
                     }
                 },
-                change:function(e){
+                change: function (e) {
                     var selected = $(e.currentTarget).data('selected');
                     // self.set('cod_versiune', selected.id).set('versiune',selected.text);
                     $.post(app.dotUrl + '/nrom/checktvv', {
@@ -345,15 +403,15 @@ module.exports = Backbone.SModel.extend({
                         varianta: self.get('varianta'),
                         versiune: self.get('versiune'),
                         wvta: self.get('wvta')
-                    }, function(response) {
+                    }, function (response) {
                         if (response !== 0) {
                             w2confirm('Acest TVV exista in baza de date la acest WVTA!<br>Doriti sa continuati cu datele introduse?')
-                                .yes(function() {
-                                    $.get(app.dotUrl + '/nrom/getTvvExistent/' + response, null, function(tvv) {
-                                        if(tvv.nr_registru){
-                                            app.trigger('dosare:reloadTVV',tvv);
-                                        }else{
-                                            app.trigger('dosare:reloadTVV',tvv);
+                                .yes(function () {
+                                    $.get(app.dotUrl + '/nrom/getTvvExistent/' + response, null, function (tvv) {
+                                        if (tvv.nr_registru) {
+                                            app.trigger('dosare:reloadTVV', tvv);
+                                        } else {
+                                            app.trigger('dosare:reloadTVV', tvv);
                                             //  self.set('id',tvv.id)
                                             //         .set('denumire_comerciala',tvv.denumire_comerciala)
                                             //         .set('nr_axe',tvv.nr_axe)
@@ -361,7 +419,7 @@ module.exports = Backbone.SModel.extend({
                                         }
                                     });
                                 })
-                                .no(function() {
+                                .no(function () {
                                     self.unset('varianta').unset('cod_varianta').unset('versiune').unset('cod_versiune');
                                     $('#varianta').w2field().reinit();
                                     $('#varianta').w2field().reinit();
@@ -369,8 +427,8 @@ module.exports = Backbone.SModel.extend({
                         }
                     });
                 },
-                idField:'cod_versiune',
-                txtField:'versiune',
+                idField: 'cod_versiune',
+                txtField: 'versiune',
                 required: true
             }, {
                 name: 'denumire_comerciala',
@@ -378,7 +436,7 @@ module.exports = Backbone.SModel.extend({
                 type: 'combo',
                 options: {
                     url: app.dotUrl + '/nrom/gettipcom',
-                    postData: function() {
+                    postData: function () {
                         return {
                             cod_cat: self.get('cod_categorie'),
                             cod_caros: self.get('cod_caroserie'),
@@ -393,8 +451,8 @@ module.exports = Backbone.SModel.extend({
                         id: self.get('denumire_comerciala'),
                         text: self.get('denumire_comerciala')
                     },
-                    onChange:function(){
-                        self.set('denumire_comerciala', e.item.id).set('denumire_comerciala',e.item.text);
+                    onChange: function () {
+                        self.set('denumire_comerciala', e.item.id).set('denumire_comerciala', e.item.text);
                     }
                 },
                 required: true
@@ -421,25 +479,25 @@ module.exports = Backbone.SModel.extend({
                                 text: self.get('antipoluare')
                             }
                         }, */
-           // {
-           //     name: 'producator',
-           //     el: '#producator',
-           //     type: 'text',
-                // options: {
-                //     url: app.dotUrl + '/nrom/getProducatori',
-                //     postData: function() {
-                //         return {
-                //             categorie: self.get('categorie')
-                //         };
-                //     },
-                //     minLength: 1,
-                //     selected: {
-                //         id: self.get('producator'),
-                //         text: self.get('producator')
-                //     }
-                // },
+            // {
+            //     name: 'producator',
+            //     el: '#producator',
+            //     type: 'text',
+            // options: {
+            //     url: app.dotUrl + '/nrom/getProducatori',
+            //     postData: function() {
+            //         return {
+            //             categorie: self.get('categorie')
+            //         };
+            //     },
+            //     minLength: 1,
+            //     selected: {
+            //         id: self.get('producator'),
+            //         text: self.get('producator')
+            //     }
+            // },
             //    required: true
-           // }
+            // }
             /* {
                             el: '#abs',
                             name: 'abs',

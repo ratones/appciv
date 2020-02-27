@@ -17,7 +17,7 @@ module.exports = Marionette.BossView.extend({
     setPagePermissions: function() {
         this.allowUnlock = ipc.sendSync('user:request:isuserinrole', [
             [1, 9], 'appdot'
-        ]) && this.model.get('SetDateTVV').get('validat') === 1;
+        ]) && this.model.get('SetDateTVV') && this.model.get('SetDateTVV').get('validat') === 1;
         this.allowValidate = ipc.sendSync('user:request:isuserinrole', [
             [1, 9,11], 'appdot'
         ]);

@@ -4,16 +4,18 @@ module.exports = Marionette.ItemView.extend({
     template: require('./../../templates/registru/motoare.hbs'),
     initialize: function() {
         this.setPagePermissions();
+        this.gridName = this.options.gridName?this.options.gridName:'gridMotoare'
+        this.sourceGridName = this.options.sourceGridName?this.options.sourceGridName:'gridSursa'
         //this.collection.setGridName('gridMotoare');
     },
     refreshUI: function() {
         // if (!this.isrendered) {
-        if (w2ui.hasOwnProperty('gridMotoare')){
-            w2ui.gridMotoare.records = this.collection.toJSON();
-            w2ui.gridMotoare.refreshFull();
+        if (w2ui.hasOwnProperty(this.gridName)){
+            w2ui[this.gridName].records = this.collection.toJSON();
+            w2ui[this.gridName].refreshFull();
         }
-        if (w2ui.hasOwnProperty('gridSursa'))
-            w2ui.gridSursa.refreshFull();
+        if (w2ui.hasOwnProperty(this.sourceGridName))
+            w2ui[this.sourceGridName].refreshFull();
         this.isrendered = true;
         // }
     },
@@ -29,7 +31,7 @@ module.exports = Marionette.ItemView.extend({
         console.log('render motor');
         var self = this;
         this.$el.find('#gridMotoare').w2grid({
-            name: 'gridMotoare',
+            name: self.gridName,
             show: {
                 toolbar: true,
                 toolbarDelete: self.allowEdit
@@ -106,7 +108,7 @@ module.exports = Marionette.ItemView.extend({
     renderSursa: function() {
         var me = this;
         this.$el.find('#gridSursa').w2grid({
-            name: 'gridSursa',
+            name: me.sourceGridName,
             recid: 'ndelcodmot',
             show: {
                 toolbar: true
@@ -183,7 +185,7 @@ module.exports = Marionette.ItemView.extend({
                     text: 'Transfera selectia',
                     icon: 'w2ui-icon-upload',
                     onClick: function() {
-                        var grid = w2ui.gridSursa;
+                        var grid = w2ui[me.sourceGridName];
                         for (var i in grid.getSelection()) {
                             var id = grid.getSelection()[i];
                             var motor = grid.get(id);
@@ -204,7 +206,7 @@ module.exports = Marionette.ItemView.extend({
                                     cilindree: motor.cilindree
                                 });
                                 me.collection.add(mdl);
-                                w2ui.gridMotoare.add(mdl.toJSON())
+                                w2ui[me.gridName].add(mdl.toJSON())
                             }
                         }
                         grid.refresh();
@@ -222,9 +224,9 @@ module.exports = Marionette.ItemView.extend({
 
     },
     onBeforeDestroy: function() {
-        if (w2ui.hasOwnProperty('gridMotoare'))
-            w2ui.gridMotoare.destroy();
-        if (w2ui.hasOwnProperty('gridSursa'))
-            w2ui.gridSursa.destroy();
+        if (w2ui.hasOwnProperty(this.gridName))
+            w2ui[this.gridName].destroy();
+        if (w2ui.hasOwnProperty(this.sourceGridName))
+            w2ui[this.sourceGridName].destroy();
     },
 });

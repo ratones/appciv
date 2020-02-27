@@ -51,7 +51,11 @@ module.exports = Marionette.ItemView.extend({
             },
             onAdd:function(){},
             onEdit:function(data){
-                app.router.navigate('appciv/editCerereOmologare/'+data.recid,{trigger:true})
+                var method = "editCerereOmologare";
+                // if(data.get('tip_omologare') != "W" || data.get('tip_omologare') != "Y"){
+                //     method = "editCerereIndividuale"
+                // }
+                app.router.navigate('appciv/'+method+'/'+data.recid,{trigger:true})
             },
             onDelete:function(data){
                 console.log(data);
@@ -63,7 +67,7 @@ module.exports = Marionette.ItemView.extend({
                 {field:'tip', caption:'Tip', size:'20%'},
                 {field:'varianta', caption:'Varianta', size:'20%'},
                 {field:'versiune', caption:'Versiune', size:'20%'},
-                {field:'denumire_comerciala', caption:'Denumire', size:'20%'},
+                {field:'denumire', caption:'Denumire', size:'20%'},
                 {field:'nr_registru', caption:'Nr. Omologare', size:'20%'},
             ],
             parser: function(responseText) {

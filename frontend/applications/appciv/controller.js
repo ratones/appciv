@@ -194,6 +194,16 @@ var controller = window.Marionette.Controller.extend({
         });
         $(argument.element).html(atrView.render().el);
     },
+
+    renderAtributeTvv: function (argument) {
+        var AtributeAccordionView = require('./views/registru/atribute');
+        var atrView = new AtributeAccordionView({
+            collection: argument.atributes,
+            iswltp : argument.iswltp
+        });
+        $(argument.element).html(atrView.render().el);
+    },
+
     renderAnvelope: function (argument) {
         AnvelopeAccordionView = require('./views/vehicule/anvelope');
         var anvView = new AnvelopeAccordionView({
@@ -520,7 +530,39 @@ var controller = window.Marionette.Controller.extend({
         var IndexView = require('./views/registru/index');
         app.container.show(new IndexView({
             message: 'Hello new module!',
-            id:id
+            id:id=='new'?null:id,
+            tip:'C'
+        }));
+    },
+    editCerereIndividuale:function(id){
+        var IndexView = require('./views/registru/index');
+        app.container.show(new IndexView({
+            message: 'Hello new module!',
+            id:id=='new'?null:id,
+            tip:'C'
+        }));
+    },
+    editCerereCOC:function(id){
+        var Model = require('./models/vehiculIndividuale');
+        var m = new Model({
+            id_comanda: 0,
+            stare:1,
+            is_nr_reg:true
+        });
+        var IndexView = require('./views/registru/cerereCOC');
+        app.container.show(new IndexView({
+            message: 'Hello new module!',
+            model: m,
+            id:id=='new'?null:id,
+            tip:'C'
+        }));
+    },
+    editCerereArtizanala:function(id){
+        var IndexView = require('./views/registru/index');
+        app.container.show(new IndexView({
+            message: 'Hello new module!',
+            id:id=='new'?null:id,
+            tip:'A'
         }));
     }
 });

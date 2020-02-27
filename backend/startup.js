@@ -23,6 +23,33 @@ w2utils.locale(localeEN);
 var gui = requireNode('nw.gui');
 
 
+var low = requireNode('lowdb')
+var FileSync = requireNode('lowdb/adapters/FileSync')
+
+
+
+var adapter = new FileSync('db.json')
+var db = low(adapter)
+/**
+ * Database tests
+ */
+
+db.defaults({ posts: [], user: {}, count: 0 })
+.write()
+
+// Add a post
+db.get('posts')
+.push({ id: 1, title: 'lowdb is awesome'})
+.write()
+
+// Set a user using Lodash shorthand syntax
+db.set('user.name', 'typicode')
+.write()
+
+// Increment count
+db.update('count', n => n + 1)
+.write()
+
 //intercomm module
 var ipc = requireNode('ipc');
 ipc.init(); //reinitialize module on window reload...
@@ -360,6 +387,7 @@ var start = function (error) {
             callback: function () {
                 w2utils.unlock('body');
                 User.checkSession(function () {
+                    app.controller.login('')
                     //app.controller.start();
                     // w2utils.lock('body', 'Va rugam asteptati!', true);
                 });

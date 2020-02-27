@@ -10,6 +10,7 @@ module.exports = Marionette.LayoutView.extend({
     },
     initialize: function(options) {
         this.id_cerere = options.id;
+        this.tip_omolo = options.tip
     },
 
     onShow: function(){
@@ -34,21 +35,29 @@ module.exports = Marionette.LayoutView.extend({
                         // { type: 'button',  id: 'item5',  caption: 'Item 5', icon: 'w2ui-icon-check', hint: 'Hint for item 5' }
                     ],
                     onClick: function (event) {
-                        w2ui['nrRegLayout'].toggle('preview')
+                        var SearchFormView = require('./searchView');
+                        //var searchForm = new SearchFormView({tip_omologare:'coc'});
+                        app.modal.show(new SearchFormView(), {
+                              preventDestroy: true
+                        });
+                        // w2ui['nrRegLayout'].toggle('preview')
                     }
                 }},
                 { type: 'main', style: pstyle, content: '<div id="workRegion" class="page">Work area</div>', title:'Zona Lucru' },
-                { type: 'preview', size: '50%', resizable: true, hidden: false, style: pstyle, content: '<div id="resourceRegion" class="page">Resource Area</div>', title:'Zona date WVTA' },
+                // { type: 'preview', size: '50%', resizable: true, hidden: false, style: pstyle, content: '<div id="resourceRegion" class="page">Resource Area</div>', title:'Zona date WVTA' },
             ]
         })
         this.addRegions({
             work: '#workRegion',
-            resource: '#resourceRegion'
+            // resource: '#resourceRegion'
         });
         var TVVFormView = require('./tvvform');
-        var tvvform = new TVVFormView({id_cerere : this.id_cerere});
+        var tvvform = new TVVFormView({id_cerere : this.id_cerere, tip_omol:this.options.tip});
+        // var SearchFormView = require('./searchView');
+        // var searchForm = new SearchFormView({tip_omologare:'coc'});
         this.work.show(tvvform)
-        w2ui['nrRegLayout'].toggle('preview')
+        // this.resource.show(searchForm)
+        // w2ui['nrRegLayout'].toggle('preview')
     },
 
     onBeforeDestroy: function() {

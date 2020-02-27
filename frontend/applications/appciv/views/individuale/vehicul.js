@@ -217,7 +217,7 @@ var root, vehicul,
         },
 
         // <Constants>
-        template: require('./../../templates/individuale/vehicul.hts'),
+        template: require('./../../templates/individuale/vehicul.html'),
         initialize: function () {
             var self = this;
             this.setPermissions();
@@ -242,6 +242,12 @@ var root, vehicul,
                     this.isNew = true;
                 }
             }
+        },
+        onRender: function(){
+            this.$el.find('.w2ui-panel-title').click(function() {
+                $(this).next().toggle('fast');
+                return false;
+            }).next().hide('fast');
         },
         /**
          * on view attachet to DOM

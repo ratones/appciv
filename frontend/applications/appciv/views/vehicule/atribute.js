@@ -5,7 +5,12 @@
          initialize:function(){
              var self = this;
              self.iswltp = this.options.iswltp;
-             this.wltpAttrs = [290,291,292,293,294,295,296,297,298,299,300,301];
+             //294 - masa incercare
+             //301 - CO2 NEDC
+             //290 - CO2 WLTP
+             //309 - autonomie
+             // 184 - cons en el
+             this.wltpAttrs = [141,291,292,293,295,296,297,298,299,300, 301];
              this.nedcAttrs = [141,142,246,247,248];
              co2wltp = this.options.collection.find(function(m){return m.get('id_nomenclator') == '290'});
              if(co2wltp){

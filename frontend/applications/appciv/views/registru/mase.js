@@ -20,9 +20,12 @@ module.exports = Marionette.FormView.extend({
     getTemplate: function() {
         switch (this.model.get('tip')) {
             case 'interval':
+                if(this.options.copil){
+                    return require('./../../templates/registru/liber.hbs');
+                }
                 return require('./../../templates/registru/interval.hbs');
             case 'lista':
-                this.source = JSON.parse(this.model.get('sursa'));
+                this.source = this.model.get('sursa')?JSON.parse(this.model.get('sursa')):null;
                 return require('./../../templates/registru/lista.hbs');
             case 'liber':
                 return require('./../../templates/registru/liber.hbs');
@@ -48,6 +51,10 @@ module.exports = Marionette.FormView.extend({
     },
     onRender: function() {
         // this.ensureElement();
+        // if(this.options.copil){
+        //     this.stickit();
+        //     return;
+        // }
         var self = this;
         if (this.model.get('tip') === 'lista' && this.model.get('multiple') !== 1) {
             this.$el.find('[name="val"]').w2field('list', {

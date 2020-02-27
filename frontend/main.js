@@ -152,6 +152,13 @@ app.commands.setHandler('app:user:logout', function(appname) {
     });
 });
 
+app.commands.setHandler('registru:search:nrreg', function() {
+    var SearchFormView = require('./applications/appciv/views/registru/searchView');
+    app.modal.show(new SearchFormView(), {
+            preventDestroy: true
+    });
+});
+
 app.commands.setHandler('app:set:pagetitle', function(page) {
     $('#lblPageTitle').html(normalizeTitle(page.page));
 });
@@ -159,6 +166,14 @@ app.commands.setHandler('app:set:pagetitle', function(page) {
 app.commands.setHandler('app:request:info', function() {
     app.controller.info();
 });
+
+app.commands.setHandler('registru:cerereomologare', function() {
+    var CerereOmologare = require('./applications/appciv/views/registru/selectieCerere')
+    app.modal.show(new CerereOmologare(),{
+        preventDestroy:true,
+        modal:true
+    })
+})
 
 /**
  * ***************************END APPLICATION COMMANDS**************************
@@ -187,6 +202,7 @@ app.on('app:request', function(data) {
     }
     // cal the requested resource
     //try {
+    console.log(data)
     app.currentApp.controller[data.page].call(this, data.params);
     app.execute('app:set:pagetitle', {
         page: data.page

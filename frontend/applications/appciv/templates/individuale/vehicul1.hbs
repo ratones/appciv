@@ -43,6 +43,8 @@
                 <div><input type="text"  id="culoare" class="select-control" /></div>
             </div>
             <div id="engine_container">
+                <div class="w2ui-panel-title">Date Motor</div>
+                <div class="panel-body">
                 <div class="w2ui-field engine">
                     <label >Cod motor:</label>
                     <div><input type="text"  id="cod_motor" /></div>
@@ -59,14 +61,65 @@
                     <label>Serie motor:</label>
                     <div><input type="text"  id="serie_motor" /></div>  
                 </div>
-                <div class="w2ui-field">
+                </div>
+                {{!-- <div class="w2ui-field">
                     <label>CO2 WLTP Comb.:</label>
                     <div><input type="text" class="input-sm" id="co2_wltp" /></div>  
                 </div>
                 <div class="w2ui-field">
                     <label>CO2 alt. WLTP Comb.:</label>
                     <div><input type="text" class="input-sm" id="co2_wltp_alt" /></div>  
+                </div> --}}
+                 <div id="supl_container">
+                <div class="w2ui-panel-title">Date Suplimentare</div>
+                <div class="panel-body">
+                    <div class="w2ui-field">
+                        <label>49.4 CO2 WLTP Comb.:</label>
+                        <div><input class="date-suplim" type="text" id="co2_wltp" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>49.4 CO2 alt. WLTP Comb.:</label>
+                        <div><input class="date-suplim" type="text" id="co2_wltp_alt" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>47.1.1 Masa incercare (kg):</label>
+                        <div><input class="date-suplim" type="text" id="masa_incercare" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>49.1 Factor deviere:</label>
+                        <div><input class="date-suplim" type="text" id="factor_deviere" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>49.1 Factor Verificare:</label>
+                        <div><input class="date-suplim" type="text" id="factor_verificare" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>49.3.1 Ecoinovatie:</label>
+                        <div><input class="date-suplim" type="text" id="ecoinovatie" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>49.3.2.1 Reduceri CO2 NEDC:</label>
+                        <div><input class="date-suplim" type="text" id="reduceri_co2_nedc" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>49.3.2.2 Reduceri CO2 WLTP:</label>
+                        <div><input class="date-suplim" type="text" id="reduceri_co2_wltp" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>49.5 Consum energie:</label>
+                        <div><input class="date-suplim" type="text" id="consum_energie" /></div>
+                    </div>
+                     <div class="w2ui-field">
+                        <label>49.5 Autonomie electric:</label>
+                        <div><input class="date-suplim" type="text" id="autonomie_electric" /></div>
+                    </div>
+                    <div class="w2ui-field">
+                        <label>0.2.3.1 Familia interpolare:</label>
+                        <div><input class="date-suplim" type="text" id="familia_interpolare" /></div>
+                    </div>
+                    <button class="btn btn-green" id="btnUpdateDateSupl"><i class="w2ui-icon-check"></i> Update</button>
                 </div>
+            </div>
             </div>
             <div class="w2ui-field">
                 <label>Observatii:</label>
@@ -108,12 +161,12 @@
              <br style="clear:both">
              <hr>
             <div id="date_tehnice_container">
-                <!-- <div class="accordion" id="date-accordion"></div> -->
+                {{!-- <div class="accordion" id="date-accordion"></div> --}}
             </div>
             <br>
             <hr>
             <div id="anvelope_container" style="margin-top: 35px">
-                <!-- <div class="accordion" id="anvelope-accordion"></div> -->
+                {{!-- <div class="accordion" id="anvelope-accordion"></div> --}}
             </div>
         </div>
     <!--end vehicule container-->

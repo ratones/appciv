@@ -4,6 +4,7 @@ module.exports = Marionette.ItemView.extend({
     template: require('./../../templates/registru/anvelope.hbs'),
     initialize: function() {
         this.setPagePermissions();
+        this.gridName = this.options.gridName? this.options.gridName:'gridAnvelope'
         //this.collection.setGridName('gridAnvelope');
     },
     // viewShown: function() {
@@ -12,11 +13,11 @@ module.exports = Marionette.ItemView.extend({
     // },
     refreshUI: function() {
         // if (!this.isrendered) {
-        if (w2ui.hasOwnProperty('gridAnvelope')) {
-            // w2ui.gridAnvelope.initToolbar();
-            // if (w2ui.gridAnvelope.toolbar != null) w2ui.gridAnvelope.toolbar.render($('#grid_' + w2ui.gridAnvelope.name + '_toolbar')[0]);
-            w2ui.gridAnvelope.records = this.collection.toJSON();
-            w2ui.gridAnvelope.refreshFull();
+        if (w2ui.hasOwnProperty(this.gridName)) {
+            // w2ui[this.gridName].initToolbar();
+            // if (w2ui[this.gridName].toolbar != null) w2ui[this.gridName].toolbar.render($('#grid_' + w2ui[this.gridName].name + '_toolbar')[0]);
+            w2ui[this.gridName].records = this.collection.toJSON();
+            w2ui[this.gridName].refreshFull();
             //console.log(this.collection.toJSON());
         }
         this.isrendered = true;
@@ -34,7 +35,7 @@ module.exports = Marionette.ItemView.extend({
     renderGrid: function() {
         var self = this;
         this.$el.find('#gridAnvelope').w2grid({
-            name: 'gridAnvelope',
+            name: self.gridName,
             records: self.collection.toJSON(),
             show: {
                 toolbar: true,
@@ -121,7 +122,7 @@ module.exports = Marionette.ItemView.extend({
 
     mvRecord:function(direction){
       var self = this;
-      var obj = w2ui.gridAnvelope;
+      var obj = w2ui[this.gridName];
       var selLength = obj.getSelection().length;
       var ind1 = obj.get(obj.getSelection()[0],true);
       var tmp = [];
@@ -248,14 +249,14 @@ module.exports = Marionette.ItemView.extend({
 
     },
     onBeforeDestroy: function() {
-        if (w2ui.hasOwnProperty('gridAnvelope'))
-            w2ui.gridAnvelope.destroy();
+        if (w2ui.hasOwnProperty(this.gridName))
+            w2ui[this.gridName].destroy();
         // if (w2ui.hasOwnProperty('gridSursaAnvelope'))
         //     w2ui.gridSursaAnvelope.destroy();
     },
     enableEdit:function(){
-      w2ui.gridAnvelope.toolbar.enable('w2ui-add');
-      w2ui.gridAnvelope.toolbar.enable('w2ui-edit');
+      w2ui[this.gridName].toolbar.enable('w2ui-add');
+      w2ui[this.gridName].toolbar.enable('w2ui-edit');
     },
     openEdit: function(id) {
         var m,View;

@@ -40,6 +40,7 @@
      },
      setSelect: function() {
          var mdl = this.model;
+         console.log('Model', mdl)
          if (this.source !== '' && this.source !== undefined && this.source !== null) {
              var data = this.source.split('|'),
                  sursa = [],
@@ -77,14 +78,20 @@
                      items: sursa
                  });
              }
-             //} else {
-             //    this.model.set('val', data[0]);
-             //    ctl.parent().remove();
-             //}
+            //  } else {
+            //     this.model.set('val', data[0]);
+            //     ctl.parent().remove();
+            //  }
 
-             //                if (self.model.get('EntityState')===0) {
-             //                    self.model.set('val',source.split(',')[0]);
-             //                }
+                            // if (self.model.get('EntityState')===0) {
+                            //     self.model.set('val',source.split(',')[0]);
+                            // }
+        //  }else if(mdl.get('writeto')){
+        //     ctl = this.$el.find('[name="val"]');
+        //     ctl.w2field('list', {
+        //         items: JSON.parse(mdl.get('writeto'))
+        //     });
+        //  }
          }
      },
      setNumeric: function() {

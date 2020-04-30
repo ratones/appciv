@@ -18,7 +18,7 @@
 	"dependencies": {
 		"backbone.marionette": "^2.4.3",
 		"getmac": "^1.0.7",
-		"jquery": "^2.1.4",
+		"jquery": "^3.5.0",
 		"lowdb": "^1.0.0",
 		"node-webkit-updater": "^0.3.0",
 		"nw-notify": "^0.2.2",

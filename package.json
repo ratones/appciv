@@ -24,7 +24,7 @@
 		"nw-notify": "^0.2.2",
 		"request": "^2.62.0",
 		"serial-number": "^1.0.0",
-		"underscore": "^1.8.3"
+		"underscore": "^1.12.1"
 	},
 	"devDependencies": {
 		"browserify": "^11.1.0",
@@ -47,7 +47,7 @@
 		"partialify": "^3.1.5",
 		"rename": "^1.0.3",
 		"rimraf": "^2.4.3",
-		"underscore": "^1.8.3",
+		"underscore": "^1.12.1",
 		"vinyl-source-stream": "^1.1.0"
 	},
 	"manifest": {
